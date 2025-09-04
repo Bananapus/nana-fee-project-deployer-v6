@@ -56,15 +56,19 @@ contract DeployScript is Script, Sphinx {
     bytes32 SUCKER_SALT = "_NANA_SUCKER_SALT_";
     string NAME = "Bananapus (Juicebox V4)";
     string SYMBOL = "NANA";
-    string PROJECT_URI = "ipfs://QmQgSDkLk9ezBgSY97w9etouf17JPBXjVdc4MryFVErFwN";
+    string PROJECT_URI = "ipfs://todo";
     uint32 NATIVE_CURRENCY = uint32(uint160(JBConstants.NATIVE_TOKEN));
     uint32 ETH_CURRENCY = 1; // JBCurrencyIds.ETH.
     uint8 DECIMALS = 18;
     uint256 DECIMAL_MULTIPLIER = 10 ** DECIMALS;
+    uint256 NANA_START_TIME = 1739836991;
+    uint256 NANA_MAINNET_AUTO_ISSUANCE_ = 957932309500316260835082;
+    uint256 NANA_BASE_AUTO_ISSUANCE_ = 1000000000000000000000000;
+    uint256 NANA_OP_AUTO_ISSUANCE_ = 1000000000000000000000000;
+    uint256 NANA_ARB_AUTO_ISSUANCE_ = 1000000000000000000000000;
 
     address OPERATOR;
     address TRUSTED_FORWARDER;
-    uint256 TIME_UNTIL_START = 3 days;
 
     function configureSphinx() public override {
         // TODO: Update to contain revnet devs.
@@ -104,20 +108,6 @@ contract DeployScript is Script, Sphinx {
         OPERATOR = safeAddress();
         TRUSTED_FORWARDER = core.controller.trustedForwarder();
 
-        // Since Juicebox has logic dependent on the timestamp we warp time to create a scenario closer to production.
-        // We force simulations to make the assumption that the `START_TIME` has not occured,
-        // and is not the current time.
-        // Because of the cross-chain allowing components of nana-core, all chains require the same start_time,
-        // for this reason we can't rely on the simulations block.time and we need a shared timestamp across all
-        // simulations.
-        // uint256 realTimestamp = vm.envUint("START_TIME");
-        uint256 realTimestamp = 1739830244;  // timestamp hardcoded at time of deploy. 
-        if (realTimestamp <= block.timestamp - TIME_UNTIL_START) {
-            revert("Something went wrong while setting the 'START_TIME' environment variable.");
-        }
-
-        vm.warp(realTimestamp);
-
         feeProjectConfig = getNANARevnetConfig();
 
         // Perform the deployment transactions.
@@ -151,11 +141,32 @@ contract DeployScript is Script, Sphinx {
             hook: IJBSplitHook(address(0))
         });
 
+        REVAutoIssuance[] memory issuanceConfs = new REVAutoIssuance[](4);
+        issuanceConfs[0] = REVAutoIssuance({
+            chainId: 1,
+            count: NANA_MAINNET_AUTO_ISSUANCE_,
+            beneficiary: OPERATOR
+        });
+        issuanceConfs[1] = REVAutoIssuance({
+            chainId: 8453,
+            count: NANA_BASE_AUTO_ISSUANCE_,
+            beneficiary: OPERATOR
+        });
+        issuanceConfs[2] = REVAutoIssuance({
+            chainId: 10,
+            count: NANA_OP_AUTO_ISSUANCE_,
+            beneficiary: OPERATOR
+        });
+        issuanceConfs[3] = REVAutoIssuance({
+            chainId: 42161,
+            count: NANA_ARB_AUTO_ISSUANCE_,
+            beneficiary: OPERATOR
+        });
         // The project's revnet stage configurations.
         REVStageConfig[] memory stageConfigurations = new REVStageConfig[](1);
         stageConfigurations[0] = REVStageConfig({
-            startsAtOrAfter: uint40(block.timestamp + TIME_UNTIL_START),
-            autoIssuances: new REVAutoIssuance[](0),
+            startsAtOrAfter: NANA_START_TIME,
+            autoIssuances: issuanceConfs,
             splitPercent: 6200, // 62%
             splits: splits,
             initialIssuance: uint112(10_000 * DECIMAL_MULTIPLIER),
