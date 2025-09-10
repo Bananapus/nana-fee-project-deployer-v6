@@ -1,30 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
-import "@bananapus/core/script/helpers/CoreDeploymentLib.sol";
-import "@bananapus/721-hook/script/helpers/Hook721DeploymentLib.sol";
-import "@bananapus/suckers/script/helpers/SuckerDeploymentLib.sol";
-import "@rev-net/core/script/helpers/RevnetCoreDeploymentLib.sol";
-import "@bananapus/buyback-hook/script/helpers/BuybackDeploymentLib.sol";
-import "@bananapus/swap-terminal/script/helpers/SwapTerminalDeploymentLib.sol";
+import "@bananapus/core-v5/script/helpers/CoreDeploymentLib.sol";
+import "@bananapus/721-hook-v5/script/helpers/Hook721DeploymentLib.sol";
+import "@bananapus/suckers-v5/script/helpers/SuckerDeploymentLib.sol";
+import "@rev-net/core-v5/script/helpers/RevnetCoreDeploymentLib.sol";
+import "@bananapus/buyback-hook-v5/script/helpers/BuybackDeploymentLib.sol";
+import "@bananapus/swap-terminal-v5/script/helpers/SwapTerminalDeploymentLib.sol";
 
-import {JBConstants} from "@bananapus/core/src/libraries/JBConstants.sol";
-import {JBAccountingContext} from "@bananapus/core/src/structs/JBAccountingContext.sol";
-import {JBTerminalConfig} from "@bananapus/core/src/structs/JBTerminalConfig.sol";
-import {JBSuckerDeployerConfig} from "@bananapus/suckers/src/structs/JBSuckerDeployerConfig.sol";
-import {JBTokenMapping} from "@bananapus/suckers/src/structs/JBTokenMapping.sol";
-import {REVAutoIssuance} from "@rev-net/core/src/structs/REVAutoIssuance.sol";
-import {REVBuybackHookConfig} from "@rev-net/core/src/structs/REVBuybackHookConfig.sol";
-import {REVBuybackPoolConfig} from "@rev-net/core/src/structs/REVBuybackPoolConfig.sol";
-import {REVConfig} from "@rev-net/core/src/structs/REVConfig.sol";
-import {REVCroptopAllowedPost} from "@rev-net/core/src/structs/REVCroptopAllowedPost.sol";
-import {REVDescription} from "@rev-net/core/src/structs/REVDescription.sol";
-import {REVLoanSource} from "@rev-net/core/src/structs/REVLoanSource.sol";
-import {REVStageConfig} from "@rev-net/core/src/structs/REVStageConfig.sol";
-import {REVSuckerDeploymentConfig} from "@rev-net/core/src/structs/REVSuckerDeploymentConfig.sol";
-import {IJBTerminal} from "@bananapus/core/src/interfaces/IJBTerminal.sol";
-import {JBSplit} from "@bananapus/core/src/structs/JBSplit.sol";
-import {IJBSplitHook} from "@bananapus/core/src/interfaces/IJBSplitHook.sol";
+import {JBConstants} from "@bananapus/core-v5/src/libraries/JBConstants.sol";
+import {JBAccountingContext} from "@bananapus/core-v5/src/structs/JBAccountingContext.sol";
+import {JBTerminalConfig} from "@bananapus/core-v5/src/structs/JBTerminalConfig.sol";
+import {JBSuckerDeployerConfig} from "@bananapus/suckers-v5/src/structs/JBSuckerDeployerConfig.sol";
+import {JBTokenMapping} from "@bananapus/suckers-v5/src/structs/JBTokenMapping.sol";
+import {REVAutoIssuance} from "@rev-net/core-v5/src/structs/REVAutoIssuance.sol";
+import {REVBuybackHookConfig} from "@rev-net/core-v5/src/structs/REVBuybackHookConfig.sol";
+import {REVBuybackPoolConfig} from "@rev-net/core-v5/src/structs/REVBuybackPoolConfig.sol";
+import {REVConfig} from "@rev-net/core-v5/src/structs/REVConfig.sol";
+import {REVCroptopAllowedPost} from "@rev-net/core-v5/src/structs/REVCroptopAllowedPost.sol";
+import {REVDescription} from "@rev-net/core-v5/src/structs/REVDescription.sol";
+import {REVLoanSource} from "@rev-net/core-v5/src/structs/REVLoanSource.sol";
+import {REVStageConfig} from "@rev-net/core-v5/src/structs/REVStageConfig.sol";
+import {REVSuckerDeploymentConfig} from "@rev-net/core-v5/src/structs/REVSuckerDeploymentConfig.sol";
+import {IJBTerminal} from "@bananapus/core-v5/src/interfaces/IJBTerminal.sol";
+import {JBSplit} from "@bananapus/core-v5/src/structs/JBSplit.sol";
+import {IJBSplitHook} from "@bananapus/core-v5/src/interfaces/IJBSplitHook.sol";
 
 import {Sphinx} from "@sphinx-labs/contracts/SphinxPlugin.sol";
 import {Script} from "forge-std/Script.sol";
@@ -54,9 +54,9 @@ contract DeployScript is Script, Sphinx {
 
     bytes32 ERC20_SALT = "_NANA_ERC20_SALT_";
     bytes32 SUCKER_SALT = "_NANA_SUCKER_SALT_";
-    string NAME = "Bananapus (Juicebox V4)";
+    string NAME = "Bananapus (Juicebox V5)";
     string SYMBOL = "NANA";
-    string PROJECT_URI = "ipfs://todo";
+    string PROJECT_URI = "ipfs://QmWCgCaryfsJYBu5LczFuBz3UKK5VEU3BZFYp2mHJTLeRQ";
     uint32 NATIVE_CURRENCY = uint32(uint160(JBConstants.NATIVE_TOKEN));
     uint32 ETH_CURRENCY = 1; // JBCurrencyIds.ETH.
     uint8 DECIMALS = 18;
