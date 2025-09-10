@@ -61,11 +61,11 @@ contract DeployScript is Script, Sphinx {
     uint32 ETH_CURRENCY = 1; // JBCurrencyIds.ETH.
     uint8 DECIMALS = 18;
     uint256 DECIMAL_MULTIPLIER = 10 ** DECIMALS;
-    uint256 NANA_START_TIME = 1739836991;
-    uint256 NANA_MAINNET_AUTO_ISSUANCE_ = 957932309500316260835082;
-    uint256 NANA_BASE_AUTO_ISSUANCE_ = 1000000000000000000000000;
-    uint256 NANA_OP_AUTO_ISSUANCE_ = 1000000000000000000000000;
-    uint256 NANA_ARB_AUTO_ISSUANCE_ = 1000000000000000000000000;
+    uint256 NANA_START_TIME = 1_739_836_991;
+    uint256 NANA_MAINNET_AUTO_ISSUANCE_ = 957_932_309_500_316_260_835_082;
+    uint256 NANA_BASE_AUTO_ISSUANCE_ = 1_000_000_000_000_000_000_000_000;
+    uint256 NANA_OP_AUTO_ISSUANCE_ = 1_000_000_000_000_000_000_000_000;
+    uint256 NANA_ARB_AUTO_ISSUANCE_ = 1_000_000_000_000_000_000_000_000;
 
     address OPERATOR;
     address TRUSTED_FORWARDER;
@@ -96,11 +96,15 @@ contract DeployScript is Script, Sphinx {
         );
         // Get the deployment addresses for the 721 hook contracts for this chain.
         buybackHook = BuybackDeploymentLib.getDeployment(
-            vm.envOr("NANA_BUYBACK_HOOK_DEPLOYMENT_PATH", string("node_modules/@bananapus/buyback-hook-v5/deployments/"))
+            vm.envOr(
+                "NANA_BUYBACK_HOOK_DEPLOYMENT_PATH", string("node_modules/@bananapus/buyback-hook-v5/deployments/")
+            )
         );
         // Get the deployment addresses for the 721 hook contracts for this chain.
         swapTerminal = SwapTerminalDeploymentLib.getDeployment(
-            vm.envOr("NANA_SWAP_TERMINAL_DEPLOYMENT_PATH", string("node_modules/@bananapus/swap-terminal-v5/deployments/"))
+            vm.envOr(
+                "NANA_SWAP_TERMINAL_DEPLOYMENT_PATH", string("node_modules/@bananapus/swap-terminal-v5/deployments/")
+            )
         );
 
         // Set the operator address to be the multisig.
@@ -141,26 +145,10 @@ contract DeployScript is Script, Sphinx {
         });
 
         REVAutoIssuance[] memory issuanceConfs = new REVAutoIssuance[](4);
-        issuanceConfs[0] = REVAutoIssuance({
-            chainId: 1,
-            count: NANA_MAINNET_AUTO_ISSUANCE_,
-            beneficiary: OPERATOR
-        });
-        issuanceConfs[1] = REVAutoIssuance({
-            chainId: 8453,
-            count: NANA_BASE_AUTO_ISSUANCE_,
-            beneficiary: OPERATOR
-        });
-        issuanceConfs[2] = REVAutoIssuance({
-            chainId: 10,
-            count: NANA_OP_AUTO_ISSUANCE_,
-            beneficiary: OPERATOR
-        });
-        issuanceConfs[3] = REVAutoIssuance({
-            chainId: 42161,
-            count: NANA_ARB_AUTO_ISSUANCE_,
-            beneficiary: OPERATOR
-        });
+        issuanceConfs[0] = REVAutoIssuance({chainId: 1, count: NANA_MAINNET_AUTO_ISSUANCE_, beneficiary: OPERATOR});
+        issuanceConfs[1] = REVAutoIssuance({chainId: 8453, count: NANA_BASE_AUTO_ISSUANCE_, beneficiary: OPERATOR});
+        issuanceConfs[2] = REVAutoIssuance({chainId: 10, count: NANA_OP_AUTO_ISSUANCE_, beneficiary: OPERATOR});
+        issuanceConfs[3] = REVAutoIssuance({chainId: 42_161, count: NANA_ARB_AUTO_ISSUANCE_, beneficiary: OPERATOR});
         // The project's revnet stage configurations.
         REVStageConfig[] memory stageConfigurations = new REVStageConfig[](1);
         stageConfigurations[0] = REVStageConfig({
