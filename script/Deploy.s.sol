@@ -54,9 +54,9 @@ contract DeployScript is Script, Sphinx {
 
     bytes32 ERC20_SALT = "_NANA_ERC20_SALT_";
     bytes32 SUCKER_SALT = "_NANA_SUCKER_SALT_";
-    string NAME = "Bananapus (Juicebox V4)";
+    string NAME = "Bananapus (Juicebox V5)";
     string SYMBOL = "NANA";
-    string PROJECT_URI = "ipfs://todo";
+    string PROJECT_URI = "ipfs://QmWCgCaryfsJYBu5LczFuBz3UKK5VEU3BZFYp2mHJTLeRQ";
     uint32 NATIVE_CURRENCY = uint32(uint160(JBConstants.NATIVE_TOKEN));
     uint32 ETH_CURRENCY = 1; // JBCurrencyIds.ETH.
     uint8 DECIMALS = 18;
