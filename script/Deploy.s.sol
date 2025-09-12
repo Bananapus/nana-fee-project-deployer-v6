@@ -9,6 +9,7 @@ import "@bananapus/buyback-hook-v5/script/helpers/BuybackDeploymentLib.sol";
 import "@bananapus/swap-terminal-v5/script/helpers/SwapTerminalDeploymentLib.sol";
 
 import {JBConstants} from "@bananapus/core-v5/src/libraries/JBConstants.sol";
+import {JBCurrencyIds} from "@bananapus/core-v5/src/libraries/JBCurrencyIds.sol";
 import {JBAccountingContext} from "@bananapus/core-v5/src/structs/JBAccountingContext.sol";
 import {JBTerminalConfig} from "@bananapus/core-v5/src/structs/JBTerminalConfig.sol";
 import {JBSuckerDeployerConfig} from "@bananapus/suckers-v5/src/structs/JBSuckerDeployerConfig.sol";
@@ -52,25 +53,26 @@ contract DeployScript is Script, Sphinx {
 
     FeeProjectConfig feeProjectConfig;
 
-    bytes32 ERC20_SALT = "_NANA_ERC20_SALT_";
-    bytes32 SUCKER_SALT = "_NANA_SUCKER_SALT_";
+    bytes32 ERC20_SALT = "_NANA_ERC20_SALT__";
+    bytes32 SUCKER_SALT = "_NANA_SUCKER_SALT__";
     string NAME = "Bananapus (Juicebox V5)";
     string SYMBOL = "NANA";
     string PROJECT_URI = "ipfs://QmWCgCaryfsJYBu5LczFuBz3UKK5VEU3BZFYp2mHJTLeRQ";
     uint32 NATIVE_CURRENCY = uint32(uint160(JBConstants.NATIVE_TOKEN));
-    uint32 ETH_CURRENCY = 1; // JBCurrencyIds.ETH.
+    uint32 ETH_CURRENCY = JBCurrencyIds.ETH;
     uint8 DECIMALS = 18;
     uint256 DECIMAL_MULTIPLIER = 10 ** DECIMALS;
-    uint256 NANA_START_TIME = 1_739_836_991;
-    uint256 NANA_MAINNET_AUTO_ISSUANCE_ = 957_932_309_500_316_260_835_082;
-    uint256 NANA_BASE_AUTO_ISSUANCE_ = 1_000_000_000_000_000_000_000_000;
-    uint256 NANA_OP_AUTO_ISSUANCE_ = 1_000_000_000_000_000_000_000_000;
-    uint256 NANA_ARB_AUTO_ISSUANCE_ = 1_000_000_000_000_000_000_000_000;
+    uint48 NANA_START_TIME = 1_740_089_444;
+    uint104 NANA_MAINNET_AUTO_ISSUANCE_ = 34_614_774_622_547_324_824_200;
+    uint104 NANA_BASE_AUTO_ISSUANCE_ = 1_604_412_323_715_200_204_800;
+    uint104 NANA_OP_AUTO_ISSUANCE_ = 6_266_215_368_602_910_600;
+    uint104 NANA_ARB_AUTO_ISSUANCE_ = 105_160_496_145_000_000;
 
     address OPERATOR;
     address TRUSTED_FORWARDER;
 
     function configureSphinx() public override {
+        // TODO: Update to contain revnet devs.
         sphinxConfig.projectName = "nana-core-v5";
         sphinxConfig.mainnets = ["ethereum", "optimism", "base", "arbitrum"];
         sphinxConfig.testnets = ["ethereum_sepolia", "optimism_sepolia", "base_sepolia", "arbitrum_sepolia"];
@@ -130,7 +132,7 @@ contract DeployScript is Script, Sphinx {
         terminalConfigurations[0] =
             JBTerminalConfig({terminal: core.terminal, accountingContextsToAccept: accountingContextsToAccept});
         terminalConfigurations[1] = JBTerminalConfig({
-            terminal: IJBTerminal(address(swapTerminal.swap_terminal)),
+            terminal: IJBTerminal(address(swapTerminal.registry)),
             accountingContextsToAccept: new JBAccountingContext[](0)
         });
 
@@ -181,14 +183,13 @@ contract DeployScript is Script, Sphinx {
 
         // The project's buyback hook configuration.
         REVBuybackPoolConfig[] memory buybackPoolConfigurations = new REVBuybackPoolConfig[](1);
-        buybackPoolConfigurations[0] = REVBuybackPoolConfig({
-            token: JBConstants.NATIVE_TOKEN,
-            fee: 10_000,
-            twapWindow: 2 days,
-            twapSlippageTolerance: 9000
+        buybackPoolConfigurations[0] =
+            REVBuybackPoolConfig({token: JBConstants.NATIVE_TOKEN, fee: 10_000, twapWindow: 2 days});
+        REVBuybackHookConfig memory buybackHookConfiguration = REVBuybackHookConfig({
+            dataHook: buybackHook.registry,
+            hookToConfigure: buybackHook.hook,
+            poolConfigurations: buybackPoolConfigurations
         });
-        REVBuybackHookConfig memory buybackHookConfiguration =
-            REVBuybackHookConfig({hook: buybackHook.hook, poolConfigurations: buybackPoolConfigurations});
 
         // Organize the instructions for how this project will connect to other chains.
         JBTokenMapping[] memory tokenMappings = new JBTokenMapping[](1);
