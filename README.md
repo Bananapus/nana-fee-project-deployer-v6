@@ -5,8 +5,8 @@ Deployment script for the Juicebox fee project (project #1). Configures the prot
 ## Architecture
 
 | File | Description |
-|---|---|
-| `script/Deploy.s.sol` | Forge + Sphinx deployment script. No `src/` contracts. |
+|------|-------------|
+| `script/Deploy.s.sol` | Forge + Sphinx deployment script. No `src/` contracts -- this repo is purely a deployment script. |
 
 ### What It Deploys
 
@@ -17,7 +17,7 @@ Project #1 is a Revnet that receives all Juicebox ecosystem fees (referenced by 
 - **Revnet stage**: 10,000 NANA per native token initial issuance, 38% issuance cut every 360 days, 62% split percent, 0.1 cash-out tax rate
 - **Auto-issuances**: Pre-minted tokens distributed across Ethereum mainnet, Base, Optimism, and Arbitrum
 - **Buyback hook**: 1% fee Uniswap pool, 2-day TWAP window
-- **Cross-chain suckers**: Native token mapped across Ethereum, Optimism, Base, and Arbitrum
+- **Cross-chain suckers**: Native token mapped across Ethereum, Optimism, Base, and Arbitrum (3 suckers from mainnet, 1 sucker from each L2 back to mainnet)
 
 ### Deployment Flow
 
@@ -28,19 +28,13 @@ Project #1 is a Revnet that receives all Juicebox ecosystem fees (referenced by 
 ## Install
 
 ```bash
-npm install @bananapus/fee-project-deployer
+npm install
 ```
 
 ## Develop
 
-```bash
-npm ci && forge install
-forge build
-```
-
-Deployments are managed with [Sphinx](https://www.sphinx.dev):
-
-```bash
-npm run deploy:mainnets  # Propose mainnet deployments
-npm run deploy:testnets  # Propose testnet deployments
-```
+| Command | Description |
+|---------|-------------|
+| `forge build` | Compile contracts |
+| `npm run deploy:mainnets` | Propose mainnet deployment via Sphinx |
+| `npm run deploy:testnets` | Propose testnet deployment via Sphinx |
