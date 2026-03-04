@@ -53,8 +53,8 @@ contract DeployScript is Script, Sphinx {
 
     FeeProjectConfig feeProjectConfig;
 
-    bytes32 ERC20_SALT = "_NANA_ERC20_SALT__";
-    bytes32 SUCKER_SALT = "_NANA_SUCKER_SALT__";
+    bytes32 ERC20_SALT = "_NANA_ERC20_SALTV6__";
+    bytes32 SUCKER_SALT = "_NANA_SUCKER_SALTV6__";
     string NAME = "Bananapus (Juicebox V5)";
     string SYMBOL = "NANA";
     string PROJECT_URI = "ipfs://QmWCgCaryfsJYBu5LczFuBz3UKK5VEU3BZFYp2mHJTLeRQ";
