@@ -1,10 +1,10 @@
 {
-    "name": "@bananapus/fee-project-deployer-v5",
-    "version": "0.0.2",
+    "name": "@bananapus/fee-project-deployer-v6",
+    "version": "0.0.1",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/bananapus/nana-fee-project-deployer-v5"
+        "url": "git+https://github.com/Bananapus/nana-fee-project-deployer-v6"
     },
     "engines": {
         "node": ">=20.0.0"
@@ -14,13 +14,13 @@
         "deploy:testnets": "source ./.env && export START_TIME=$(date +%s) && npx sphinx propose ./script/Deploy.s.sol --networks testnets"
     },
     "dependencies": {
-        "@bananapus/buyback-hook-v5": "^0.0.2",
-        "@bananapus/core-v5": "^0.0.4",
-        "@bananapus/ownable-v5": "^0.0.2",
-        "@bananapus/suckers-v5": "^0.0.2",
-        "@bananapus/swap-terminal-v5": "^0.0.3",
-        "@bananapus/permission-ids-v5": "^0.0.2",
-        "@rev-net/core-v5": "^0.0.2",
+        "@bananapus/buyback-hook-v6": "^0.0.1",
+        "@bananapus/core-v6": "^0.0.1",
+        "@bananapus/ownable-v6": "^0.0.1",
+        "@bananapus/suckers-v6": "^0.0.1",
+        "@bananapus/swap-terminal-v6": "^0.0.1",
+        "@bananapus/permission-ids-v6": "^0.0.1",
+        "@rev-net/core-v6": "^0.0.1",
         "@openzeppelin/contracts": "^5.2.0"
     },
     "devDependencies": {
