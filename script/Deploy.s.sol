@@ -63,16 +63,15 @@ contract DeployScript is Script, Sphinx {
     uint8 DECIMALS = 18;
     uint256 DECIMAL_MULTIPLIER = 10 ** DECIMALS;
     uint48 NANA_START_TIME = 1_740_089_444;
-    uint104 NANA_MAINNET_AUTO_ISSUANCE_ = 34_614_774_622_547_324_824_200;
-    uint104 NANA_BASE_AUTO_ISSUANCE_ = 1_604_412_323_715_200_204_800;
-    uint104 NANA_OP_AUTO_ISSUANCE_ = 6_266_215_368_602_910_600;
-    uint104 NANA_ARB_AUTO_ISSUANCE_ = 105_160_496_145_000_000;
+    uint104 NANA_MAINNET_AUTO_ISSUANCE = 34_614_774_622_547_324_824_200;
+    uint104 NANA_BASE_AUTO_ISSUANCE = 1_604_412_323_715_200_204_800;
+    uint104 NANA_OP_AUTO_ISSUANCE = 6_266_215_368_602_910_600;
+    uint104 NANA_ARB_AUTO_ISSUANCE = 105_160_496_145_000_000;
 
     address OPERATOR;
     address TRUSTED_FORWARDER;
 
     function configureSphinx() public override {
-        // TODO: Update to contain revnet devs.
         sphinxConfig.projectName = "nana-core-v5";
         sphinxConfig.mainnets = ["ethereum", "optimism", "base", "arbitrum"];
         sphinxConfig.testnets = ["ethereum_sepolia", "optimism_sepolia", "base_sepolia", "arbitrum_sepolia"];
@@ -88,7 +87,7 @@ contract DeployScript is Script, Sphinx {
         suckers = SuckerDeploymentLib.getDeployment(
             vm.envOr("NANA_SUCKERS_DEPLOYMENT_PATH", string("node_modules/@bananapus/suckers-v5/deployments/"))
         );
-        // Get the deployment addresses for the 721 hook contracts for this chain.
+        // Get the deployment addresses for the revnet core contracts for this chain.
         revnet = RevnetCoreDeploymentLib.getDeployment(
             vm.envOr("REVNET_CORE_DEPLOYMENT_PATH", string("node_modules/@rev-net/core-v5/deployments/"))
         );
@@ -96,13 +95,13 @@ contract DeployScript is Script, Sphinx {
         hook = Hook721DeploymentLib.getDeployment(
             vm.envOr("NANA_721_DEPLOYMENT_PATH", string("node_modules/@bananapus/721-hook-v5/deployments/"))
         );
-        // Get the deployment addresses for the 721 hook contracts for this chain.
+        // Get the deployment addresses for the buyback hook contracts for this chain.
         buybackHook = BuybackDeploymentLib.getDeployment(
             vm.envOr(
                 "NANA_BUYBACK_HOOK_DEPLOYMENT_PATH", string("node_modules/@bananapus/buyback-hook-v5/deployments/")
             )
         );
-        // Get the deployment addresses for the 721 hook contracts for this chain.
+        // Get the deployment addresses for the swap terminal contracts for this chain.
         swapTerminal = SwapTerminalDeploymentLib.getDeployment(
             vm.envOr(
                 "NANA_SWAP_TERMINAL_DEPLOYMENT_PATH", string("node_modules/@bananapus/swap-terminal-v5/deployments/")
@@ -147,10 +146,10 @@ contract DeployScript is Script, Sphinx {
         });
 
         REVAutoIssuance[] memory issuanceConfs = new REVAutoIssuance[](4);
-        issuanceConfs[0] = REVAutoIssuance({chainId: 1, count: NANA_MAINNET_AUTO_ISSUANCE_, beneficiary: OPERATOR});
-        issuanceConfs[1] = REVAutoIssuance({chainId: 8453, count: NANA_BASE_AUTO_ISSUANCE_, beneficiary: OPERATOR});
-        issuanceConfs[2] = REVAutoIssuance({chainId: 10, count: NANA_OP_AUTO_ISSUANCE_, beneficiary: OPERATOR});
-        issuanceConfs[3] = REVAutoIssuance({chainId: 42_161, count: NANA_ARB_AUTO_ISSUANCE_, beneficiary: OPERATOR});
+        issuanceConfs[0] = REVAutoIssuance({chainId: 1, count: NANA_MAINNET_AUTO_ISSUANCE, beneficiary: OPERATOR});
+        issuanceConfs[1] = REVAutoIssuance({chainId: 8453, count: NANA_BASE_AUTO_ISSUANCE, beneficiary: OPERATOR});
+        issuanceConfs[2] = REVAutoIssuance({chainId: 10, count: NANA_OP_AUTO_ISSUANCE, beneficiary: OPERATOR});
+        issuanceConfs[3] = REVAutoIssuance({chainId: 42_161, count: NANA_ARB_AUTO_ISSUANCE, beneficiary: OPERATOR});
         // The project's revnet stage configurations.
         REVStageConfig[] memory stageConfigurations = new REVStageConfig[](1);
         stageConfigurations[0] = REVStageConfig({
