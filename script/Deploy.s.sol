@@ -246,12 +246,13 @@ contract DeployScript is Script, Sphinx {
         core.projects.approve(address(revnet.basic_deployer), FEE_PROJECT_ID);
 
         // Deploy the NANA fee project.
-        revnet.basic_deployer.deployFor({
-            revnetId: FEE_PROJECT_ID,
-            configuration: feeProjectConfig.configuration,
-            terminalConfigurations: feeProjectConfig.terminalConfigurations,
-            buybackHookConfiguration: feeProjectConfig.buybackHookConfiguration,
-            suckerDeploymentConfiguration: feeProjectConfig.suckerDeploymentConfiguration
-        });
+        revnet.basic_deployer
+            .deployFor({
+                revnetId: FEE_PROJECT_ID,
+                configuration: feeProjectConfig.configuration,
+                terminalConfigurations: feeProjectConfig.terminalConfigurations,
+                buybackHookConfiguration: feeProjectConfig.buybackHookConfiguration,
+                suckerDeploymentConfiguration: feeProjectConfig.suckerDeploymentConfiguration
+            });
     }
 }
