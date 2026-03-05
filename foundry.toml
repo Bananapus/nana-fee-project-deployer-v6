@@ -1,13 +1,9 @@
 [profile.default]
 solc = '0.8.23'
-evm_version = 'paris'                   # Required for L2s (Optimism, Arbitrum, etc.)
-sizes = true
-verbosity = 3                           # display errors
+evm_version = 'paris'
 optimizer_runs = 100000000
-block_number = 14126430
-block_timestamp = 1643802347
 via_ir = true
-build_info = true
+libs = ["node_modules", "lib"]
 extra_output = ['storageLayout']
 fs_permissions = [{ access = "read-write", path = "./"}]
 
