@@ -172,7 +172,7 @@ contract DeployScript is Script, Sphinx {
 
             // The project's revnet configuration
             revnetConfiguration = REVConfig({
-                description: REVDescription(NAME, SYMBOL, PROJECT_URI, ERC20_SALT),
+                description: REVDescription({name: NAME, ticker: SYMBOL, uri: PROJECT_URI, salt: ERC20_SALT}),
                 baseCurrency: ETH_CURRENCY,
                 splitOperator: OPERATOR,
                 stageConfigurations: stageConfigurations,
@@ -243,7 +243,7 @@ contract DeployScript is Script, Sphinx {
         uint256 FEE_PROJECT_ID = 1;
 
         // Approve the basic deployer to configure the project.
-        core.projects.approve(address(revnet.basic_deployer), FEE_PROJECT_ID);
+        core.projects.approve({to: address(revnet.basic_deployer), tokenId: FEE_PROJECT_ID});
 
         // Deploy the NANA fee project.
         revnet.basic_deployer
