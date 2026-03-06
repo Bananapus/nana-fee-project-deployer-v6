@@ -1,31 +1,31 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
-import "@bananapus/core-v5/script/helpers/CoreDeploymentLib.sol";
-import "@bananapus/721-hook-v5/script/helpers/Hook721DeploymentLib.sol";
-import "@bananapus/suckers-v5/script/helpers/SuckerDeploymentLib.sol";
-import "@rev-net/core-v5/script/helpers/RevnetCoreDeploymentLib.sol";
-import "@bananapus/buyback-hook-v5/script/helpers/BuybackDeploymentLib.sol";
-import "@bananapus/swap-terminal-v5/script/helpers/SwapTerminalDeploymentLib.sol";
+import "@bananapus/core-v6/script/helpers/CoreDeploymentLib.sol";
+import "@bananapus/721-hook-v6/script/helpers/Hook721DeploymentLib.sol";
+import "@bananapus/suckers-v6/script/helpers/SuckerDeploymentLib.sol";
+import "@rev-net/core-v6/script/helpers/RevnetCoreDeploymentLib.sol";
+import "@bananapus/buyback-hook-v6/script/helpers/BuybackDeploymentLib.sol";
+import "@bananapus/swap-terminal-v6/script/helpers/SwapTerminalDeploymentLib.sol";
 
-import {JBConstants} from "@bananapus/core-v5/src/libraries/JBConstants.sol";
-import {JBCurrencyIds} from "@bananapus/core-v5/src/libraries/JBCurrencyIds.sol";
-import {JBAccountingContext} from "@bananapus/core-v5/src/structs/JBAccountingContext.sol";
-import {JBTerminalConfig} from "@bananapus/core-v5/src/structs/JBTerminalConfig.sol";
-import {JBSuckerDeployerConfig} from "@bananapus/suckers-v5/src/structs/JBSuckerDeployerConfig.sol";
-import {JBTokenMapping} from "@bananapus/suckers-v5/src/structs/JBTokenMapping.sol";
-import {REVAutoIssuance} from "@rev-net/core-v5/src/structs/REVAutoIssuance.sol";
-import {REVBuybackHookConfig} from "@rev-net/core-v5/src/structs/REVBuybackHookConfig.sol";
-import {REVBuybackPoolConfig} from "@rev-net/core-v5/src/structs/REVBuybackPoolConfig.sol";
-import {REVConfig} from "@rev-net/core-v5/src/structs/REVConfig.sol";
-import {REVCroptopAllowedPost} from "@rev-net/core-v5/src/structs/REVCroptopAllowedPost.sol";
-import {REVDescription} from "@rev-net/core-v5/src/structs/REVDescription.sol";
-import {REVLoanSource} from "@rev-net/core-v5/src/structs/REVLoanSource.sol";
-import {REVStageConfig} from "@rev-net/core-v5/src/structs/REVStageConfig.sol";
-import {REVSuckerDeploymentConfig} from "@rev-net/core-v5/src/structs/REVSuckerDeploymentConfig.sol";
-import {IJBTerminal} from "@bananapus/core-v5/src/interfaces/IJBTerminal.sol";
-import {JBSplit} from "@bananapus/core-v5/src/structs/JBSplit.sol";
-import {IJBSplitHook} from "@bananapus/core-v5/src/interfaces/IJBSplitHook.sol";
+import {JBConstants} from "@bananapus/core-v6/src/libraries/JBConstants.sol";
+import {JBCurrencyIds} from "@bananapus/core-v6/src/libraries/JBCurrencyIds.sol";
+import {JBAccountingContext} from "@bananapus/core-v6/src/structs/JBAccountingContext.sol";
+import {JBTerminalConfig} from "@bananapus/core-v6/src/structs/JBTerminalConfig.sol";
+import {JBSuckerDeployerConfig} from "@bananapus/suckers-v6/src/structs/JBSuckerDeployerConfig.sol";
+import {JBTokenMapping} from "@bananapus/suckers-v6/src/structs/JBTokenMapping.sol";
+import {REVAutoIssuance} from "@rev-net/core-v6/src/structs/REVAutoIssuance.sol";
+import {REVBuybackHookConfig} from "@rev-net/core-v6/src/structs/REVBuybackHookConfig.sol";
+import {REVBuybackPoolConfig} from "@rev-net/core-v6/src/structs/REVBuybackPoolConfig.sol";
+import {REVConfig} from "@rev-net/core-v6/src/structs/REVConfig.sol";
+import {REVCroptopAllowedPost} from "@rev-net/core-v6/src/structs/REVCroptopAllowedPost.sol";
+import {REVDescription} from "@rev-net/core-v6/src/structs/REVDescription.sol";
+import {REVLoanSource} from "@rev-net/core-v6/src/structs/REVLoanSource.sol";
+import {REVStageConfig} from "@rev-net/core-v6/src/structs/REVStageConfig.sol";
+import {REVSuckerDeploymentConfig} from "@rev-net/core-v6/src/structs/REVSuckerDeploymentConfig.sol";
+import {IJBTerminal} from "@bananapus/core-v6/src/interfaces/IJBTerminal.sol";
+import {JBSplit} from "@bananapus/core-v6/src/structs/JBSplit.sol";
+import {IJBSplitHook} from "@bananapus/core-v6/src/interfaces/IJBSplitHook.sol";
 
 import {Sphinx} from "@sphinx-labs/contracts/SphinxPlugin.sol";
 import {Script} from "forge-std/Script.sol";
@@ -53,9 +53,9 @@ contract DeployScript is Script, Sphinx {
 
     FeeProjectConfig feeProjectConfig;
 
-    bytes32 ERC20_SALT = "_NANA_ERC20_SALT__";
-    bytes32 SUCKER_SALT = "_NANA_SUCKER_SALT__";
-    string NAME = "Bananapus (Juicebox V5)";
+    bytes32 ERC20_SALT = "_NANA_ERC20_SALTV6__";
+    bytes32 SUCKER_SALT = "_NANA_SUCKER_SALTV6__";
+    string NAME = "Bananapus (Juicebox V6)";
     string SYMBOL = "NANA";
     string PROJECT_URI = "ipfs://QmWCgCaryfsJYBu5LczFuBz3UKK5VEU3BZFYp2mHJTLeRQ";
     uint32 NATIVE_CURRENCY = uint32(uint160(JBConstants.NATIVE_TOKEN));
@@ -63,17 +63,17 @@ contract DeployScript is Script, Sphinx {
     uint8 DECIMALS = 18;
     uint256 DECIMAL_MULTIPLIER = 10 ** DECIMALS;
     uint48 NANA_START_TIME = 1_740_089_444;
-    uint104 NANA_MAINNET_AUTO_ISSUANCE_ = 34_614_774_622_547_324_824_200;
-    uint104 NANA_BASE_AUTO_ISSUANCE_ = 1_604_412_323_715_200_204_800;
-    uint104 NANA_OP_AUTO_ISSUANCE_ = 6_266_215_368_602_910_600;
-    uint104 NANA_ARB_AUTO_ISSUANCE_ = 105_160_496_145_000_000;
+    uint104 NANA_MAINNET_AUTO_ISSUANCE = 34_614_774_622_547_324_824_200;
+    uint104 NANA_BASE_AUTO_ISSUANCE = 1_604_412_323_715_200_204_800;
+    uint104 NANA_OP_AUTO_ISSUANCE = 6_266_215_368_602_910_600;
+    uint104 NANA_ARB_AUTO_ISSUANCE = 105_160_496_145_000_000;
 
     address OPERATOR;
     address TRUSTED_FORWARDER;
 
     function configureSphinx() public override {
         // TODO: Update to contain revnet devs.
-        sphinxConfig.projectName = "nana-core-v5";
+        sphinxConfig.projectName = "nana-core-v6";
         sphinxConfig.mainnets = ["ethereum", "optimism", "base", "arbitrum"];
         sphinxConfig.testnets = ["ethereum_sepolia", "optimism_sepolia", "base_sepolia", "arbitrum_sepolia"];
     }
@@ -82,30 +82,30 @@ contract DeployScript is Script, Sphinx {
         // Get the deployment addresses for the nana CORE for this chain.
         // We want to do this outside of the `sphinx` modifier.
         core = CoreDeploymentLib.getDeployment(
-            vm.envOr("NANA_CORE_DEPLOYMENT_PATH", string("node_modules/@bananapus/core-v5/deployments/"))
+            vm.envOr("NANA_CORE_DEPLOYMENT_PATH", string("node_modules/@bananapus/core-v6/deployments/"))
         );
         // Get the deployment addresses for the suckers contracts for this chain.
         suckers = SuckerDeploymentLib.getDeployment(
-            vm.envOr("NANA_SUCKERS_DEPLOYMENT_PATH", string("node_modules/@bananapus/suckers-v5/deployments/"))
+            vm.envOr("NANA_SUCKERS_DEPLOYMENT_PATH", string("node_modules/@bananapus/suckers-v6/deployments/"))
         );
-        // Get the deployment addresses for the 721 hook contracts for this chain.
+        // Get the deployment addresses for the revnet core contracts for this chain.
         revnet = RevnetCoreDeploymentLib.getDeployment(
-            vm.envOr("REVNET_CORE_DEPLOYMENT_PATH", string("node_modules/@rev-net/core-v5/deployments/"))
+            vm.envOr("REVNET_CORE_DEPLOYMENT_PATH", string("node_modules/@rev-net/core-v6/deployments/"))
         );
         // Get the deployment addresses for the 721 hook contracts for this chain.
         hook = Hook721DeploymentLib.getDeployment(
-            vm.envOr("NANA_721_DEPLOYMENT_PATH", string("node_modules/@bananapus/721-hook-v5/deployments/"))
+            vm.envOr("NANA_721_DEPLOYMENT_PATH", string("node_modules/@bananapus/721-hook-v6/deployments/"))
         );
-        // Get the deployment addresses for the 721 hook contracts for this chain.
+        // Get the deployment addresses for the buyback hook contracts for this chain.
         buybackHook = BuybackDeploymentLib.getDeployment(
             vm.envOr(
-                "NANA_BUYBACK_HOOK_DEPLOYMENT_PATH", string("node_modules/@bananapus/buyback-hook-v5/deployments/")
+                "NANA_BUYBACK_HOOK_DEPLOYMENT_PATH", string("node_modules/@bananapus/buyback-hook-v6/deployments/")
             )
         );
-        // Get the deployment addresses for the 721 hook contracts for this chain.
+        // Get the deployment addresses for the swap terminal contracts for this chain.
         swapTerminal = SwapTerminalDeploymentLib.getDeployment(
             vm.envOr(
-                "NANA_SWAP_TERMINAL_DEPLOYMENT_PATH", string("node_modules/@bananapus/swap-terminal-v5/deployments/")
+                "NANA_SWAP_TERMINAL_DEPLOYMENT_PATH", string("node_modules/@bananapus/swap-terminal-v6/deployments/")
             )
         );
 
@@ -147,10 +147,10 @@ contract DeployScript is Script, Sphinx {
         });
 
         REVAutoIssuance[] memory issuanceConfs = new REVAutoIssuance[](4);
-        issuanceConfs[0] = REVAutoIssuance({chainId: 1, count: NANA_MAINNET_AUTO_ISSUANCE_, beneficiary: OPERATOR});
-        issuanceConfs[1] = REVAutoIssuance({chainId: 8453, count: NANA_BASE_AUTO_ISSUANCE_, beneficiary: OPERATOR});
-        issuanceConfs[2] = REVAutoIssuance({chainId: 10, count: NANA_OP_AUTO_ISSUANCE_, beneficiary: OPERATOR});
-        issuanceConfs[3] = REVAutoIssuance({chainId: 42_161, count: NANA_ARB_AUTO_ISSUANCE_, beneficiary: OPERATOR});
+        issuanceConfs[0] = REVAutoIssuance({chainId: 1, count: NANA_MAINNET_AUTO_ISSUANCE, beneficiary: OPERATOR});
+        issuanceConfs[1] = REVAutoIssuance({chainId: 8453, count: NANA_BASE_AUTO_ISSUANCE, beneficiary: OPERATOR});
+        issuanceConfs[2] = REVAutoIssuance({chainId: 10, count: NANA_OP_AUTO_ISSUANCE, beneficiary: OPERATOR});
+        issuanceConfs[3] = REVAutoIssuance({chainId: 42_161, count: NANA_ARB_AUTO_ISSUANCE, beneficiary: OPERATOR});
         // The project's revnet stage configurations.
         REVStageConfig[] memory stageConfigurations = new REVStageConfig[](1);
         stageConfigurations[0] = REVStageConfig({
@@ -172,7 +172,7 @@ contract DeployScript is Script, Sphinx {
 
             // The project's revnet configuration
             revnetConfiguration = REVConfig({
-                description: REVDescription(NAME, SYMBOL, PROJECT_URI, ERC20_SALT),
+                description: REVDescription({name: NAME, ticker: SYMBOL, uri: PROJECT_URI, salt: ERC20_SALT}),
                 baseCurrency: ETH_CURRENCY,
                 splitOperator: OPERATOR,
                 stageConfigurations: stageConfigurations,
@@ -243,15 +243,16 @@ contract DeployScript is Script, Sphinx {
         uint256 FEE_PROJECT_ID = 1;
 
         // Approve the basic deployer to configure the project.
-        core.projects.approve(address(revnet.basic_deployer), FEE_PROJECT_ID);
+        core.projects.approve({to: address(revnet.basic_deployer), tokenId: FEE_PROJECT_ID});
 
         // Deploy the NANA fee project.
-        revnet.basic_deployer.deployFor({
-            revnetId: FEE_PROJECT_ID,
-            configuration: feeProjectConfig.configuration,
-            terminalConfigurations: feeProjectConfig.terminalConfigurations,
-            buybackHookConfiguration: feeProjectConfig.buybackHookConfiguration,
-            suckerDeploymentConfiguration: feeProjectConfig.suckerDeploymentConfiguration
-        });
+        revnet.basic_deployer
+            .deployFor({
+                revnetId: FEE_PROJECT_ID,
+                configuration: feeProjectConfig.configuration,
+                terminalConfigurations: feeProjectConfig.terminalConfigurations,
+                buybackHookConfiguration: feeProjectConfig.buybackHookConfiguration,
+                suckerDeploymentConfiguration: feeProjectConfig.suckerDeploymentConfiguration
+            });
     }
 }
