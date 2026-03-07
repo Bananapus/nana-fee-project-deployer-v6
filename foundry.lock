@@ -1,0 +1,11 @@
+{
+  "lib/forge-std": {
+    "rev": "52715a217dc51d0de15877878ab8213f6cbbbab5"
+  },
+  "lib/sphinx": {
+    "branch": {
+      "name": "v0.23.0",
+      "rev": "5fb24a825f46bd6ae0b5359fe0da1d2346126b09"
+    }
+  }
+}

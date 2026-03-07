@@ -2,11 +2,9 @@
 pragma solidity 0.8.23;
 
 import "@bananapus/core-v6/script/helpers/CoreDeploymentLib.sol";
-import "@bananapus/721-hook-v6/script/helpers/Hook721DeploymentLib.sol";
 import "@bananapus/suckers-v6/script/helpers/SuckerDeploymentLib.sol";
 import "@rev-net/core-v6/script/helpers/RevnetCoreDeploymentLib.sol";
-import "@bananapus/buyback-hook-v6/script/helpers/BuybackDeploymentLib.sol";
-import "@bananapus/swap-terminal-v6/script/helpers/SwapTerminalDeploymentLib.sol";
+import "@bananapus/router-terminal-v6/script/helpers/RouterTerminalDeploymentLib.sol";
 
 import {JBConstants} from "@bananapus/core-v6/src/libraries/JBConstants.sol";
 import {JBCurrencyIds} from "@bananapus/core-v6/src/libraries/JBCurrencyIds.sol";
@@ -15,12 +13,8 @@ import {JBTerminalConfig} from "@bananapus/core-v6/src/structs/JBTerminalConfig.
 import {JBSuckerDeployerConfig} from "@bananapus/suckers-v6/src/structs/JBSuckerDeployerConfig.sol";
 import {JBTokenMapping} from "@bananapus/suckers-v6/src/structs/JBTokenMapping.sol";
 import {REVAutoIssuance} from "@rev-net/core-v6/src/structs/REVAutoIssuance.sol";
-import {REVBuybackHookConfig} from "@rev-net/core-v6/src/structs/REVBuybackHookConfig.sol";
-import {REVBuybackPoolConfig} from "@rev-net/core-v6/src/structs/REVBuybackPoolConfig.sol";
 import {REVConfig} from "@rev-net/core-v6/src/structs/REVConfig.sol";
-import {REVCroptopAllowedPost} from "@rev-net/core-v6/src/structs/REVCroptopAllowedPost.sol";
 import {REVDescription} from "@rev-net/core-v6/src/structs/REVDescription.sol";
-import {REVLoanSource} from "@rev-net/core-v6/src/structs/REVLoanSource.sol";
 import {REVStageConfig} from "@rev-net/core-v6/src/structs/REVStageConfig.sol";
 import {REVSuckerDeploymentConfig} from "@rev-net/core-v6/src/structs/REVSuckerDeploymentConfig.sol";
 import {IJBTerminal} from "@bananapus/core-v6/src/interfaces/IJBTerminal.sol";
@@ -30,28 +24,15 @@ import {IJBSplitHook} from "@bananapus/core-v6/src/interfaces/IJBSplitHook.sol";
 import {Sphinx} from "@sphinx-labs/contracts/SphinxPlugin.sol";
 import {Script} from "forge-std/Script.sol";
 
-struct FeeProjectConfig {
-    REVConfig configuration;
-    JBTerminalConfig[] terminalConfigurations;
-    REVBuybackHookConfig buybackHookConfiguration;
-    REVSuckerDeploymentConfig suckerDeploymentConfiguration;
-}
-
 contract DeployScript is Script, Sphinx {
-    /// @notice tracks the deployment of the buyback hook.
-    BuybackDeployment buybackHook;
     /// @notice tracks the deployment of the core contracts for the chain we are deploying to.
     CoreDeployment core;
-    /// @notice tracks the deployment of the 721 hook contracts for the chain we are deploying to.
-    Hook721Deployment hook;
     /// @notice tracks the deployment of the revnet contracts for the chain we are deploying to.
     RevnetCoreDeployment revnet;
     /// @notice tracks the deployment of the sucker contracts for the chain we are deploying to.
     SuckerDeployment suckers;
-    /// @notice tracks the deployment of the swap terminal.
-    SwapTerminalDeployment swapTerminal;
-
-    FeeProjectConfig feeProjectConfig;
+    /// @notice tracks the deployment of the router terminal.
+    RouterTerminalDeployment routerTerminal;
 
     bytes32 ERC20_SALT = "_NANA_ERC20_SALTV6__";
     bytes32 SUCKER_SALT = "_NANA_SUCKER_SALTV6__";
@@ -92,20 +73,11 @@ contract DeployScript is Script, Sphinx {
         revnet = RevnetCoreDeploymentLib.getDeployment(
             vm.envOr("REVNET_CORE_DEPLOYMENT_PATH", string("node_modules/@rev-net/core-v6/deployments/"))
         );
-        // Get the deployment addresses for the 721 hook contracts for this chain.
-        hook = Hook721DeploymentLib.getDeployment(
-            vm.envOr("NANA_721_DEPLOYMENT_PATH", string("node_modules/@bananapus/721-hook-v6/deployments/"))
-        );
-        // Get the deployment addresses for the buyback hook contracts for this chain.
-        buybackHook = BuybackDeploymentLib.getDeployment(
-            vm.envOr(
-                "NANA_BUYBACK_HOOK_DEPLOYMENT_PATH", string("node_modules/@bananapus/buyback-hook-v6/deployments/")
-            )
-        );
         // Get the deployment addresses for the swap terminal contracts for this chain.
-        swapTerminal = SwapTerminalDeploymentLib.getDeployment(
+        routerTerminal = RouterTerminalDeploymentLib.getDeployment(
             vm.envOr(
-                "NANA_SWAP_TERMINAL_DEPLOYMENT_PATH", string("node_modules/@bananapus/swap-terminal-v6/deployments/")
+                "NANA_ROUTER_TERMINAL_DEPLOYMENT_PATH",
+                string("node_modules/@bananapus/router-terminal-v6/deployments/")
             )
         );
 
@@ -113,13 +85,13 @@ contract DeployScript is Script, Sphinx {
         OPERATOR = safeAddress();
         TRUSTED_FORWARDER = core.controller.trustedForwarder();
 
-        feeProjectConfig = getNANARevnetConfig();
-
         // Perform the deployment transactions.
         deploy();
     }
 
-    function getNANARevnetConfig() internal view returns (FeeProjectConfig memory) {
+    function deploy() public sphinx {
+        uint256 FEE_PROJECT_ID = 1;
+
         // The tokens that the project accepts and stores.
         JBAccountingContext[] memory accountingContextsToAccept = new JBAccountingContext[](1);
 
@@ -132,7 +104,7 @@ contract DeployScript is Script, Sphinx {
         terminalConfigurations[0] =
             JBTerminalConfig({terminal: core.terminal, accountingContextsToAccept: accountingContextsToAccept});
         terminalConfigurations[1] = JBTerminalConfig({
-            terminal: IJBTerminal(address(swapTerminal.registry)),
+            terminal: IJBTerminal(address(routerTerminal.registry)),
             accountingContextsToAccept: new JBAccountingContext[](0)
         });
 
@@ -165,38 +137,20 @@ contract DeployScript is Script, Sphinx {
             extraMetadata: 4 // Allow adding suckers.
         });
 
-        REVConfig memory revnetConfiguration;
-        {
-            REVLoanSource[] memory _loanSources = new REVLoanSource[](1);
-            _loanSources[0] = REVLoanSource({token: JBConstants.NATIVE_TOKEN, terminal: core.terminal});
-
-            // The project's revnet configuration
-            revnetConfiguration = REVConfig({
-                description: REVDescription({name: NAME, ticker: SYMBOL, uri: PROJECT_URI, salt: ERC20_SALT}),
-                baseCurrency: ETH_CURRENCY,
-                splitOperator: OPERATOR,
-                stageConfigurations: stageConfigurations,
-                loanSources: _loanSources,
-                loans: address(revnet.loans)
-            });
-        }
-
-        // The project's buyback hook configuration.
-        REVBuybackPoolConfig[] memory buybackPoolConfigurations = new REVBuybackPoolConfig[](1);
-        buybackPoolConfigurations[0] =
-            REVBuybackPoolConfig({token: JBConstants.NATIVE_TOKEN, fee: 10_000, twapWindow: 2 days});
-        REVBuybackHookConfig memory buybackHookConfiguration = REVBuybackHookConfig({
-            dataHook: buybackHook.registry,
-            hookToConfigure: buybackHook.hook,
-            poolConfigurations: buybackPoolConfigurations
+        // The project's revnet configuration
+        REVConfig memory revnetConfiguration = REVConfig({
+            description: REVDescription({name: NAME, ticker: SYMBOL, uri: PROJECT_URI, salt: ERC20_SALT}),
+            baseCurrency: ETH_CURRENCY,
+            splitOperator: OPERATOR,
+            stageConfigurations: stageConfigurations
         });
 
         // Organize the instructions for how this project will connect to other chains.
         JBTokenMapping[] memory tokenMappings = new JBTokenMapping[](1);
         tokenMappings[0] = JBTokenMapping({
             localToken: JBConstants.NATIVE_TOKEN,
-            remoteToken: JBConstants.NATIVE_TOKEN,
             minGas: 200_000,
+            remoteToken: bytes32(uint256(uint160(JBConstants.NATIVE_TOKEN))),
             minBridgeAmount: 0.01 ether
         });
 
@@ -231,17 +185,6 @@ contract DeployScript is Script, Sphinx {
         REVSuckerDeploymentConfig memory suckerDeploymentConfiguration =
             REVSuckerDeploymentConfig({deployerConfigurations: suckerDeployerConfigurations, salt: SUCKER_SALT});
 
-        return FeeProjectConfig({
-            configuration: revnetConfiguration,
-            terminalConfigurations: terminalConfigurations,
-            buybackHookConfiguration: buybackHookConfiguration,
-            suckerDeploymentConfiguration: suckerDeploymentConfiguration
-        });
-    }
-
-    function deploy() public sphinx {
-        uint256 FEE_PROJECT_ID = 1;
-
         // Approve the basic deployer to configure the project.
         core.projects.approve({to: address(revnet.basic_deployer), tokenId: FEE_PROJECT_ID});
 
@@ -249,10 +192,9 @@ contract DeployScript is Script, Sphinx {
         revnet.basic_deployer
             .deployFor({
                 revnetId: FEE_PROJECT_ID,
-                configuration: feeProjectConfig.configuration,
-                terminalConfigurations: feeProjectConfig.terminalConfigurations,
-                buybackHookConfiguration: feeProjectConfig.buybackHookConfiguration,
-                suckerDeploymentConfiguration: feeProjectConfig.suckerDeploymentConfiguration
+                configuration: revnetConfiguration,
+                terminalConfigurations: terminalConfigurations,
+                suckerDeploymentConfiguration: suckerDeploymentConfiguration
             });
     }
 }

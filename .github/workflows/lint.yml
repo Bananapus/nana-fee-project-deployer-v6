@@ -10,13 +10,15 @@ jobs:
   forge-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: bahmutov/npm-install@v1
-      - name: Install Foundry
-        uses: onbjerg/foundry-toolchain@v1
+      - uses: actions/setup-node@v4
         with:
-          version: nightly
+          node-version: latest
+      - name: Install npm dependencies
+        run: npm ci --production
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
       - name: Check linting
         run: forge fmt --check
