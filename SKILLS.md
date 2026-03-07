@@ -1,4 +1,4 @@
-# nana-fee-project-deployer-v5
+# Juicebox Fee Project Deployer
 
 ## Purpose
 
