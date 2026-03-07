@@ -1,4 +1,4 @@
-# nana-fee-project-deployer-v5
+# Juicebox Fee Project Deployer
 
 Deployment script for the Juicebox fee project (project #1). Configures the protocol fee recipient as a Revnet with buyback hooks, swap terminal, and cross-chain suckers.
 
