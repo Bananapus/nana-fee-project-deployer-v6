@@ -17,10 +17,10 @@ jobs:
         with:
           node-version: latest
       - name: Install npm dependencies
-        run: npm ci --production
+        run: npm install --omit=dev
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
       - name: Run tests
         run: forge test --fail-fast
       - name: Check contract sizes
-        run: forge build --sizes
+        run: FOUNDRY_PROFILE=ci_sizes forge build --sizes
