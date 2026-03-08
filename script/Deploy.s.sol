@@ -50,7 +50,6 @@ contract DeployScript is Script, Sphinx {
     uint104 NANA_ARB_AUTO_ISSUANCE = 105_160_496_145_000_000;
 
     address OPERATOR;
-    address TRUSTED_FORWARDER;
 
     function configureSphinx() public override {
         // TODO: Update to contain revnet devs.
@@ -83,7 +82,6 @@ contract DeployScript is Script, Sphinx {
 
         // Set the operator address to be the multisig.
         OPERATOR = safeAddress();
-        TRUSTED_FORWARDER = core.controller.trustedForwarder();
 
         // Perform the deployment transactions.
         deploy();
