@@ -2,6 +2,8 @@
 
 How we write Solidity and organize repos across the Juicebox V6 ecosystem. `nana-core-v6` is the gold standard — when in doubt, match what it does.
 
+**This repo's deviations:** No `via_ir`. Package scope: `@bananapus/`.
+
 ## File Organization
 
 ```
@@ -322,11 +324,9 @@ try hook.afterPayRecordedWith(context) {} catch (bytes memory reason) {
 
 ## DevOps
 
-**This repo's deviations:** `optimizer_runs = 100000000` (aggressive optimization for deployment-only code). No `src/` directory — this repo is a deployment script only.
-
 ### foundry.toml
 
-Standard config across all repos:
+Standard config for `@bananapus/core-v6`:
 
 ```toml
 [profile.default]
@@ -353,13 +353,7 @@ multiline_func_header = "all"
 wrap_comments = true
 ```
 
-**Deviations:** `optimizer_runs = 100000000` (aggressive optimization for deployment script).
-**Package name:** @bananapus/fee-project-deployer-v6
-
-**Variations:**
-- `evm_version = 'cancun'` for repos using transient storage (buyback-hook, router-terminal, univ4-router)
-- `via_ir = true` for repos hitting stack-too-deep (buyback-hook, banny-retail, univ4-lp-split-hook, deploy-all)
-- `optimizer = false` only for deploy-all-v6 (stack-too-deep with optimization)
+This is the standard config with no deviations.
 
 ### CI Workflows
 
@@ -416,10 +410,10 @@ jobs:
 
 ```json
 {
-  "name": "@bananapus/package-name-v6",
+  "name": "@bananapus/core-v6",
   "version": "x.x.x",
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/Org/repo.git" },
+  "repository": { "type": "git", "url": "git+https://github.com/Bananapus/nana-core-v6.git" },
   "engines": { "node": ">=20.0.0" },
   "scripts": {
     "test": "forge test",
