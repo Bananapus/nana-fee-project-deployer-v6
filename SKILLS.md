@@ -15,26 +15,26 @@ Forge deployment script that configures Juicebox project #1 -- the protocol fee 
 | Function | Contract | What it does |
 |----------|----------|--------------|
 | `run()` | `DeployScript` | Main entry point: reads deployment addresses from npm packages, builds config, calls `deploy()`. |
-| `deploy()` | `DeployScript` | Sphinx-guarded: approves `REVBasicDeployer` for project #1, calls `basic_deployer.deployFor()`. |
+| `deploy()` | `DeployScript` | Sphinx-guarded: approves `REVDeployer` for project #1, calls `deployer.deployFor()`. |
 | `getNANARevnetConfig()` | `DeployScript` | Builds the complete `FeeProjectConfig` with terminals, revnet stages, buyback hook, and sucker configuration. |
 
 ## Integration Points
 
 | Dependency | Import | Used For |
 |------------|--------|----------|
-| `nana-core-v5` | `CoreDeploymentLib` | Reading `JBProjects`, `JBMultiTerminal`, `JBController` addresses |
-| `revnet-core-v5` | `RevnetCoreDeploymentLib` | Reading `REVBasicDeployer`, `REVLoans` addresses |
-| `nana-suckers-v5` | `SuckerDeploymentLib` | Reading sucker deployers (Optimism, Base, Arbitrum) |
-| `nana-buyback-hook-v5` | `BuybackDeploymentLib` | Reading `JBBuybackHook` registry and hook |
-| `nana-swap-terminal-v5` | `SwapTerminalDeploymentLib` | Reading `JBSwapTerminal` registry |
-| `nana-721-hook-v5` | `Hook721DeploymentLib` | Reading 721 hook deployment addresses |
+| `nana-core-v6` | `CoreDeploymentLib` | Reading `JBProjects`, `JBMultiTerminal`, `JBController` addresses |
+| `revnet-core-v6` | `RevnetCoreDeploymentLib` | Reading `REVDeployer`, `REVLoans` addresses |
+| `nana-suckers-v6` | `SuckerDeploymentLib` | Reading sucker deployers (Optimism, Base, Arbitrum) |
+| `nana-buyback-hook-v6` | `BuybackDeploymentLib` | Reading `JBBuybackHook` registry and hook |
+| `nana-swap-terminal-v6` | `SwapTerminalDeploymentLib` | Reading `JBSwapTerminal` registry |
+| `nana-721-hook-v6` | `Hook721DeploymentLib` | Reading 721 hook deployment addresses |
 | `@sphinx-labs/plugins` | `Sphinx` | Multi-chain deployment coordination with team approval |
 
 ## Key Types
 
 | Struct/Enum | Key Fields | Used In |
 |-------------|------------|---------|
-| `FeeProjectConfig` | `REVConfig configuration`, `JBTerminalConfig[] terminalConfigurations`, `REVBuybackHookConfig`, `REVSuckerDeploymentConfig` | Defined inline in `Deploy.s.sol`, passed to `basic_deployer.deployFor()` |
+| `FeeProjectConfig` | `REVConfig configuration`, `JBTerminalConfig[] terminalConfigurations`, `REVBuybackHookConfig`, `REVSuckerDeploymentConfig` | Defined inline in `Deploy.s.sol`, passed to `deployer.deployFor()` |
 
 ## Gotchas
 
