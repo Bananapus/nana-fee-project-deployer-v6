@@ -167,7 +167,7 @@ contract FeeProjectConfigBuilder {
             localToken: JBConstants.NATIVE_TOKEN,
             minGas: 200_000,
             remoteToken: bytes32(uint256(uint160(JBConstants.NATIVE_TOKEN))),
-            minBridgeAmount: 0.01 ether
+            toRemoteFee: 0.01 ether
         });
     }
 
@@ -520,7 +520,7 @@ contract TestFeeProjectDeployer is Test {
         assertEq(
             mappings[0].remoteToken, bytes32(uint256(uint160(JBConstants.NATIVE_TOKEN))), "Remote token matches native"
         );
-        assertEq(mappings[0].minBridgeAmount, 0.01 ether, "Min bridge amount is 0.01 ether");
+        assertEq(mappings[0].toRemoteFee, 0.01 ether, "toRemoteFee is 0.01 ether");
     }
 
     function test_suckerTokenMappingsPerDeployer() public view {
@@ -932,7 +932,125 @@ contract TestFeeProjectDeployer is Test {
             assertEq(rs.deployerConfigurations[i].mappings.length, 1);
             assertEq(rs.deployerConfigurations[i].mappings[0].localToken, JBConstants.NATIVE_TOKEN);
             assertEq(rs.deployerConfigurations[i].mappings[0].minGas, 200_000);
-            assertEq(rs.deployerConfigurations[i].mappings[0].minBridgeAmount, 0.01 ether);
+            assertEq(rs.deployerConfigurations[i].mappings[0].toRemoteFee, 0.01 ether);
         }
+    }
+
+    // ====================================================================
+    // 13. Auto-Issuance Proportionality Invariants
+    // ====================================================================
+
+    /// @notice The sum of all auto-issuance amounts must not overflow uint256.
+    function test_autoIssuanceTotalDoesNotOverflow() public view {
+        REVStageConfig[] memory stages = builder.buildStageConfigurations(operatorAddr);
+        REVAutoIssuance[] memory autoIssuances = stages[0].autoIssuances;
+
+        uint256 total = 0;
+        for (uint256 i = 0; i < autoIssuances.length; i++) {
+            uint256 prev = total;
+            total += autoIssuances[i].count;
+            assertGe(total, prev, "No overflow in auto issuance sum");
+        }
+    }
+
+    // ====================================================================
+    // 14. Fuzz: Operator Address Independence
+    // ====================================================================
+
+    /// @notice The deploy configuration must be structurally valid for any nonzero operator.
+    function test_fuzz_operatorAddressIndependence(address op) public view {
+        vm.assume(op != address(0));
+
+        REVConfig memory config = builder.buildRevnetConfiguration(op);
+
+        // Structure invariants hold for any operator.
+        assertEq(config.stageConfigurations.length, 1, "Always 1 stage");
+        assertEq(config.baseCurrency, ETH_CURRENCY, "Base currency always ETH");
+        assertEq(config.splitOperator, op, "Split operator matches provided address");
+        assertEq(config.stageConfigurations[0].splits[0].beneficiary, op, "Split beneficiary matches");
+
+        for (uint256 i = 0; i < config.stageConfigurations[0].autoIssuances.length; i++) {
+            assertEq(config.stageConfigurations[0].autoIssuances[i].beneficiary, op, "Auto issuance beneficiary matches");
+        }
+    }
+
+    // ====================================================================
+    // 15. Cross-Chain Sucker Symmetry
+    // ====================================================================
+
+    /// @notice Every sucker deployer config on mainnet must use the same token mappings.
+    function test_mainnetSuckerMappingsAreIdentical() public view {
+        REVSuckerDeploymentConfig memory config =
+            builder.buildSuckerDeploymentConfigMainnet(opDeployer, baseDeployer, arbDeployer);
+
+        JBTokenMapping[] memory ref = config.deployerConfigurations[0].mappings;
+        for (uint256 i = 1; i < config.deployerConfigurations.length; i++) {
+            JBTokenMapping[] memory cur = config.deployerConfigurations[i].mappings;
+            assertEq(cur.length, ref.length, "Same number of token mappings across all deployers");
+            for (uint256 j = 0; j < ref.length; j++) {
+                assertEq(cur[j].localToken, ref[j].localToken, "localToken identical across deployers");
+                assertEq(cur[j].minGas, ref[j].minGas, "minGas identical across deployers");
+                assertEq(cur[j].remoteToken, ref[j].remoteToken, "remoteToken identical across deployers");
+                assertEq(cur[j].toRemoteFee, ref[j].toRemoteFee, "toRemoteFee identical across deployers");
+            }
+        }
+    }
+
+    /// @notice Mainnet and L2 sucker configs must use the same salt and identical token mappings.
+    function test_mainnetAndL2SuckerConfigsSameSaltAndMappings() public view {
+        REVSuckerDeploymentConfig memory mainnet =
+            builder.buildSuckerDeploymentConfigMainnet(opDeployer, baseDeployer, arbDeployer);
+        REVSuckerDeploymentConfig memory l2 = builder.buildSuckerDeploymentConfigL2(opDeployer);
+
+        assertEq(mainnet.salt, l2.salt, "Salt matches across mainnet and L2");
+
+        // Compare token mappings between mainnet's first deployer and L2's deployer.
+        JBTokenMapping[] memory mainnetMappings = mainnet.deployerConfigurations[0].mappings;
+        JBTokenMapping[] memory l2Mappings = l2.deployerConfigurations[0].mappings;
+
+        assertEq(mainnetMappings.length, l2Mappings.length, "Same number of mappings");
+        for (uint256 i = 0; i < mainnetMappings.length; i++) {
+            assertEq(mainnetMappings[i].localToken, l2Mappings[i].localToken, "localToken matches");
+            assertEq(mainnetMappings[i].minGas, l2Mappings[i].minGas, "minGas matches");
+            assertEq(mainnetMappings[i].remoteToken, l2Mappings[i].remoteToken, "remoteToken matches");
+            assertEq(mainnetMappings[i].toRemoteFee, l2Mappings[i].toRemoteFee, "toRemoteFee matches");
+        }
+    }
+
+    // ====================================================================
+    // 16. Deploy Script Hardcoded Values Snapshot
+    // ====================================================================
+
+    /// @notice Pin all hardcoded economic parameters from Deploy.s.sol.
+    ///         If anyone changes the deploy script values, this test fails,
+    ///         forcing a conscious review of the change.
+    function test_deployScriptHardcodedValuesSnapshot() public view {
+        REVStageConfig[] memory stages = builder.buildStageConfigurations(operatorAddr);
+        REVStageConfig memory s = stages[0];
+
+        // Economic parameters.
+        assertEq(s.startsAtOrAfter, 1_740_089_444, "NANA_START_TIME pinned");
+        assertEq(s.splitPercent, 6200, "62% split pinned");
+        assertEq(s.initialIssuance, uint112(10_000 * 1e18), "10,000 initial issuance pinned");
+        assertEq(s.issuanceCutFrequency, 360 days, "360-day cut frequency pinned");
+        assertEq(s.issuanceCutPercent, 380_000_000, "38% issuance cut pinned");
+        assertEq(s.cashOutTaxRate, 1000, "10% cash out tax pinned");
+        assertEq(s.extraMetadata, 4, "Allow adding suckers pinned");
+
+        // Auto-issuance amounts.
+        assertEq(s.autoIssuances[0].count, 34_614_774_622_547_324_824_200, "Mainnet auto issuance pinned");
+        assertEq(s.autoIssuances[1].count, 1_604_412_323_715_200_204_800, "Base auto issuance pinned");
+        assertEq(s.autoIssuances[2].count, 6_266_215_368_602_910_600, "OP auto issuance pinned");
+        assertEq(s.autoIssuances[3].count, 105_160_496_145_000_000, "Arb auto issuance pinned");
+
+        // Identity.
+        REVConfig memory config = builder.buildRevnetConfiguration(operatorAddr);
+        assertEq(keccak256(bytes(config.description.name)), keccak256(bytes("Bananapus (Juicebox V6)")), "Name pinned");
+        assertEq(keccak256(bytes(config.description.ticker)), keccak256(bytes("NANA")), "Symbol pinned");
+        assertEq(
+            keccak256(bytes(config.description.uri)),
+            keccak256(bytes("ipfs://QmWCgCaryfsJYBu5LczFuBz3UKK5VEU3BZFYp2mHJTLeRQ")),
+            "URI pinned"
+        );
     }
 }
