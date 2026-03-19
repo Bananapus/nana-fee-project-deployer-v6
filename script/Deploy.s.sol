@@ -149,7 +149,7 @@ contract DeployScript is Script, Sphinx {
             localToken: JBConstants.NATIVE_TOKEN,
             minGas: 200_000,
             remoteToken: bytes32(uint256(uint160(JBConstants.NATIVE_TOKEN))),
-            minBridgeAmount: 0.01 ether
+            toRemoteFee: 0.01 ether
         });
 
         JBSuckerDeployerConfig[] memory suckerDeployerConfigurations;
