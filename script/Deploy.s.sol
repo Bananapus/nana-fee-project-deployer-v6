@@ -148,8 +148,7 @@ contract DeployScript is Script, Sphinx {
         tokenMappings[0] = JBTokenMapping({
             localToken: JBConstants.NATIVE_TOKEN,
             minGas: 200_000,
-            remoteToken: bytes32(uint256(uint160(JBConstants.NATIVE_TOKEN))),
-            toRemoteFee: 0.01 ether
+            remoteToken: bytes32(uint256(uint160(JBConstants.NATIVE_TOKEN)))
         });
 
         JBSuckerDeployerConfig[] memory suckerDeployerConfigurations;
