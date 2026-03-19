@@ -30,6 +30,7 @@ import {JBRuleset} from "@bananapus/core-v6/src/structs/JBRuleset.sol";
 import {IJBTerminal} from "@bananapus/core-v6/src/interfaces/IJBTerminal.sol";
 import {IJBSplitHook} from "@bananapus/core-v6/src/interfaces/IJBSplitHook.sol";
 import {IJBRulesetDataHook} from "@bananapus/core-v6/src/interfaces/IJBRulesetDataHook.sol";
+import {IJBPriceFeed} from "@bananapus/core-v6/src/interfaces/IJBPriceFeed.sol";
 
 // 721 Hook
 import {JB721TiersHook} from "@bananapus/721-hook-v6/src/JB721TiersHook.sol";
@@ -71,6 +72,13 @@ import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 // Permit2
 import {IPermit2} from "@uniswap/permit2/src/interfaces/IPermit2.sol";
 import {DeployPermit2} from "@uniswap/permit2/test/utils/DeployPermit2.sol";
+
+/// @notice Identity price feed returning 1:1 for same-asset currency pairs.
+contract MockPriceFeed is IJBPriceFeed {
+    function currentUnitPrice(uint256 decimals) external pure override returns (uint256) {
+        return 10 ** decimals;
+    }
+}
 
 /// @notice Fork test for the fee project deployer flow.
 /// Deploys the full JB core + REVDeployer infrastructure on a mainnet fork and
@@ -200,6 +208,20 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
             permit2Instance,
             TRUSTED_FORWARDER
         );
+
+        // ── Place minimal bytecode at address(0) and mock its observe call so the
+        // buyback hook's TWAP oracle lookup (key.hooks = address(0) when no pool
+        // exists) returns valid zero data instead of reverting. ──
+        vm.etch(address(0), hex"00");
+        vm.mockCall(address(0), hex"", abi.encode(new int56[](2), new uint160[](2)));
+
+        // ── Register identity price feed (NATIVE_TOKEN currency ↔ ETH base currency) ──
+        // The buyback hook converts between the terminal's accounting currency
+        // (uint32(uint160(NATIVE_TOKEN)) = 61166) and the project's base currency (ETH = 1).
+        // Both represent ETH, so the feed returns 1:1.
+        MockPriceFeed identityFeed = new MockPriceFeed();
+        vm.prank(MULTISIG);
+        jbPrices.addPriceFeedFor(0, NATIVE_CURRENCY, ETH_CURRENCY, IJBPriceFeed(address(identityFeed)));
 
         // ── Create project 1 (fee project) ──
         vm.prank(MULTISIG);
