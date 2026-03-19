@@ -167,7 +167,7 @@ contract FeeProjectConfigBuilder {
             localToken: JBConstants.NATIVE_TOKEN,
             minGas: 200_000,
             remoteToken: bytes32(uint256(uint160(JBConstants.NATIVE_TOKEN))),
-            minBridgeAmount: 0.01 ether
+            toRemoteFee: 0.01 ether
         });
     }
 
@@ -520,7 +520,7 @@ contract TestFeeProjectDeployer is Test {
         assertEq(
             mappings[0].remoteToken, bytes32(uint256(uint160(JBConstants.NATIVE_TOKEN))), "Remote token matches native"
         );
-        assertEq(mappings[0].minBridgeAmount, 0.01 ether, "Min bridge amount is 0.01 ether");
+        assertEq(mappings[0].toRemoteFee, 0.01 ether, "toRemoteFee is 0.01 ether");
     }
 
     function test_suckerTokenMappingsPerDeployer() public view {
@@ -932,7 +932,7 @@ contract TestFeeProjectDeployer is Test {
             assertEq(rs.deployerConfigurations[i].mappings.length, 1);
             assertEq(rs.deployerConfigurations[i].mappings[0].localToken, JBConstants.NATIVE_TOKEN);
             assertEq(rs.deployerConfigurations[i].mappings[0].minGas, 200_000);
-            assertEq(rs.deployerConfigurations[i].mappings[0].minBridgeAmount, 0.01 ether);
+            assertEq(rs.deployerConfigurations[i].mappings[0].toRemoteFee, 0.01 ether);
         }
     }
 }
