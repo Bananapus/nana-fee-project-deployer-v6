@@ -76,12 +76,14 @@ import {DeployPermit2} from "@uniswap/permit2/test/utils/DeployPermit2.sol";
 /// Deploys the full JB core + REVDeployer infrastructure on a mainnet fork and
 /// exercises the fee-project configuration matching the production deploy script.
 contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
-    // ───────────────────────── Mainnet constants ─────────────────────────
+    // ───────────────────────── Mainnet constants
+    // ─────────────────────────
 
     /// @dev Uniswap V4 PoolManager on Ethereum mainnet.
     address constant POOL_MANAGER_ADDR = 0x000000000004444c5dc75cB358380D2e3dE08A90;
 
-    // ───────────────────────── Deploy-script constants ─────────────────────────
+    // ───────────────────────── Deploy-script constants
+    // ─────────────────────────
 
     uint256 constant FEE_PROJECT_ID = 1;
     string constant NAME = "Bananapus (Juicebox V6)";
@@ -104,7 +106,8 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
     uint16 constant SPLIT_PERCENT = 6200; // 62%
     uint104 constant MAINNET_AUTO_ISSUANCE = 34_614_774_622_547_324_824_200;
 
-    // ───────────────────────── Actors ─────────────────────────
+    // ───────────────────────── Actors
+    // ─────────────────────────
 
     // forge-lint: disable-next-line(mixed-case-variable)
     address MULTISIG = makeAddr("multisig");
@@ -116,7 +119,8 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
     address AUTO_ISSUANCE_BENEFICIARY = makeAddr("autoIssuanceBeneficiary");
     address constant TRUSTED_FORWARDER = address(0);
 
-    // ───────────────────────── Infrastructure ─────────────────────────
+    // ───────────────────────── Infrastructure
+    // ─────────────────────────
 
     // JB Core
     JBPermissions jbPermissions;
@@ -143,7 +147,8 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
     IJBBuybackHookRegistry buybackRegistry;
     REVLoans loansContract;
 
-    // ───────────────────────── Setup ─────────────────────────
+    // ───────────────────────── Setup
+    // ─────────────────────────
 
     function setUp() public {
         // Fork mainnet at a stable block (post-V4 deployment).
@@ -186,7 +191,13 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         permit2Instance = IPermit2(deployPermit2());
 
         jbMultiTerminal = new JBMultiTerminal(
-            jbFeelessAddresses, jbPermissions, jbProjects, jbSplits, jbTerminalStore, jbTokens, permit2Instance,
+            jbFeelessAddresses,
+            jbPermissions,
+            jbProjects,
+            jbSplits,
+            jbTerminalStore,
+            jbTokens,
+            permit2Instance,
             TRUSTED_FORWARDER
         );
 
@@ -199,10 +210,13 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         suckerRegistry = new JBSuckerRegistry(jbDirectory, jbPermissions, MULTISIG, TRUSTED_FORWARDER);
 
         JB721TiersHookStore hookStore = new JB721TiersHookStore();
-        JB721TiersHook exampleHook =
-            new JB721TiersHook(jbDirectory, jbPermissions, jbPrices, jbRulesets, hookStore, jbSplits, TRUSTED_FORWARDER);
+        JB721TiersHook exampleHook = new JB721TiersHook(
+            jbDirectory, jbPermissions, jbPrices, jbRulesets, hookStore, jbSplits, TRUSTED_FORWARDER
+        );
         IJBAddressRegistry addressRegistry = new JBAddressRegistry();
-        hookDeployer = new JB721TiersHookDeployer(exampleHook, IJB721TiersHookStore(address(hookStore)), addressRegistry, TRUSTED_FORWARDER);
+        hookDeployer = new JB721TiersHookDeployer(
+            exampleHook, IJB721TiersHookStore(address(hookStore)), addressRegistry, TRUSTED_FORWARDER
+        );
 
         publisher = new CTPublisher(jbDirectory, jbPermissions, FEE_PROJECT_ID, TRUSTED_FORWARDER);
 
@@ -256,7 +270,8 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         vm.deal(PAYER, 100 ether);
     }
 
-    // ───────────────────────── Config helpers ─────────────────────────
+    // ───────────────────────── Config helpers
+    // ─────────────────────────
 
     /// @notice Build the fee project REVConfig matching the deploy script.
     function _buildFeeProjectConfig()
@@ -274,8 +289,9 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
             JBAccountingContext({token: JBConstants.NATIVE_TOKEN, decimals: 18, currency: NATIVE_CURRENCY});
 
         terminalConfigs = new JBTerminalConfig[](1);
-        terminalConfigs[0] =
-            JBTerminalConfig({terminal: IJBTerminal(address(jbMultiTerminal)), accountingContextsToAccept: accountingContexts});
+        terminalConfigs[0] = JBTerminalConfig({
+            terminal: IJBTerminal(address(jbMultiTerminal)), accountingContextsToAccept: accountingContexts
+        });
 
         // Reserved splits: 100% of reserved tokens go to OPERATOR.
         JBSplit[] memory splits = new JBSplit[](1);
@@ -290,11 +306,8 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
 
         // Auto-issuance: only configure for mainnet (chainId=1).
         REVAutoIssuance[] memory autoIssuances = new REVAutoIssuance[](1);
-        autoIssuances[0] = REVAutoIssuance({
-            chainId: 1,
-            count: MAINNET_AUTO_ISSUANCE,
-            beneficiary: AUTO_ISSUANCE_BENEFICIARY
-        });
+        autoIssuances[0] =
+            REVAutoIssuance({chainId: 1, count: MAINNET_AUTO_ISSUANCE, beneficiary: AUTO_ISSUANCE_BENEFICIARY});
 
         // Stage configuration matching the deploy script.
         REVStageConfig[] memory stages = new REVStageConfig[](1);
@@ -318,13 +331,12 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         });
 
         // Empty sucker deployment (no cross-chain setup for this test).
-        suckerConfig = REVSuckerDeploymentConfig({
-            deployerConfigurations: new JBSuckerDeployerConfig[](0),
-            salt: bytes32(0)
-        });
+        suckerConfig =
+            REVSuckerDeploymentConfig({deployerConfigurations: new JBSuckerDeployerConfig[](0), salt: bytes32(0)});
     }
 
-    // ───────────────────────── Test 1: Deploy succeeds ─────────────────────────
+    // ───────────────────────── Test 1: Deploy succeeds
+    // ─────────────────────────
 
     /// @notice Fork mainnet, deploy full JB+REV infrastructure, deploy fee project.
     ///         Verifies the deployment does not revert.
@@ -359,7 +371,8 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         assertTrue(terminals.length > 0, "At least one terminal should be configured");
     }
 
-    // ───────────────────────── Test 2: Accepts payments ─────────────────────────
+    // ───────────────────────── Test 2: Accepts payments
+    // ─────────────────────────
 
     /// @notice Pay ETH to the deployed fee project and verify NANA tokens are minted at the
     ///         correct weight (10,000 tokens/ETH with 62% reserved).
@@ -406,7 +419,8 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         assertTrue(tokensReceived > 0, "Payer should receive some tokens");
     }
 
-    // ───────────────────────── Test 3: Auto-issuance ─────────────────────────
+    // ───────────────────────── Test 3: Auto-issuance
+    // ─────────────────────────
 
     /// @notice Deploy with auto-issuance for mainnet (chainId=1). Call autoIssueFor after stage
     ///         starts. Verify beneficiary receives the auto-issued tokens.
@@ -435,13 +449,8 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         uint256 stageId = currentRuleset.id;
 
         // Verify auto-issuance is available for the beneficiary.
-        uint256 autoIssuanceAmount =
-            revDeployer.amountToAutoIssue(FEE_PROJECT_ID, stageId, AUTO_ISSUANCE_BENEFICIARY);
-        assertEq(
-            autoIssuanceAmount,
-            MAINNET_AUTO_ISSUANCE,
-            "Auto-issuance amount should match configured value"
-        );
+        uint256 autoIssuanceAmount = revDeployer.amountToAutoIssue(FEE_PROJECT_ID, stageId, AUTO_ISSUANCE_BENEFICIARY);
+        assertEq(autoIssuanceAmount, MAINNET_AUTO_ISSUANCE, "Auto-issuance amount should match configured value");
 
         // Record the beneficiary's balance before auto-issuance.
         uint256 balanceBefore = jbTokens.totalBalanceOf(AUTO_ISSUANCE_BENEFICIARY, FEE_PROJECT_ID);
@@ -452,9 +461,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         // Verify the beneficiary received the tokens.
         uint256 balanceAfter = jbTokens.totalBalanceOf(AUTO_ISSUANCE_BENEFICIARY, FEE_PROJECT_ID);
         assertEq(
-            balanceAfter - balanceBefore,
-            MAINNET_AUTO_ISSUANCE,
-            "Beneficiary should receive the auto-issued tokens"
+            balanceAfter - balanceBefore, MAINNET_AUTO_ISSUANCE, "Beneficiary should receive the auto-issued tokens"
         );
 
         // Verify the auto-issuance slot is now zero (consumed).
@@ -462,7 +469,8 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         assertEq(remaining, 0, "Auto-issuance should be fully consumed");
     }
 
-    // ───────────────────────── Test 4: Reserved splits ─────────────────────────
+    // ───────────────────────── Test 4: Reserved splits
+    // ─────────────────────────
 
     /// @notice Pay ETH. Verify 62% of new tokens route to the operator via reserved split
     ///         distribution.
