@@ -166,8 +166,7 @@ contract FeeProjectConfigBuilder {
         tokenMappings[0] = JBTokenMapping({
             localToken: JBConstants.NATIVE_TOKEN,
             minGas: 200_000,
-            remoteToken: bytes32(uint256(uint160(JBConstants.NATIVE_TOKEN))),
-            toRemoteFee: 0.01 ether
+            remoteToken: bytes32(uint256(uint160(JBConstants.NATIVE_TOKEN)))
         });
     }
 
@@ -520,7 +519,6 @@ contract TestFeeProjectDeployer is Test {
         assertEq(
             mappings[0].remoteToken, bytes32(uint256(uint160(JBConstants.NATIVE_TOKEN))), "Remote token matches native"
         );
-        assertEq(mappings[0].toRemoteFee, 0.01 ether, "toRemoteFee is 0.01 ether");
     }
 
     function test_suckerTokenMappingsPerDeployer() public view {
@@ -932,7 +930,6 @@ contract TestFeeProjectDeployer is Test {
             assertEq(rs.deployerConfigurations[i].mappings.length, 1);
             assertEq(rs.deployerConfigurations[i].mappings[0].localToken, JBConstants.NATIVE_TOKEN);
             assertEq(rs.deployerConfigurations[i].mappings[0].minGas, 200_000);
-            assertEq(rs.deployerConfigurations[i].mappings[0].toRemoteFee, 0.01 ether);
         }
     }
 
@@ -993,7 +990,6 @@ contract TestFeeProjectDeployer is Test {
                 assertEq(cur[j].localToken, ref[j].localToken, "localToken identical across deployers");
                 assertEq(cur[j].minGas, ref[j].minGas, "minGas identical across deployers");
                 assertEq(cur[j].remoteToken, ref[j].remoteToken, "remoteToken identical across deployers");
-                assertEq(cur[j].toRemoteFee, ref[j].toRemoteFee, "toRemoteFee identical across deployers");
             }
         }
     }
@@ -1015,7 +1011,6 @@ contract TestFeeProjectDeployer is Test {
             assertEq(mainnetMappings[i].localToken, l2Mappings[i].localToken, "localToken matches");
             assertEq(mainnetMappings[i].minGas, l2Mappings[i].minGas, "minGas matches");
             assertEq(mainnetMappings[i].remoteToken, l2Mappings[i].remoteToken, "remoteToken matches");
-            assertEq(mainnetMappings[i].toRemoteFee, l2Mappings[i].toRemoteFee, "toRemoteFee matches");
         }
     }
 
