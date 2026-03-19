@@ -17,7 +17,7 @@
     },
     "dependencies": {
         "@bananapus/721-hook-v6": "^0.0.16",
-        "@bananapus/core-v6": "^0.0.16",
+        "@bananapus/core-v6": "^0.0.18",
         "@bananapus/ownable-v6": "^0.0.9",
         "@bananapus/permission-ids-v6": "^0.0.9",
         "@bananapus/router-terminal-v6": "^0.0.11",
