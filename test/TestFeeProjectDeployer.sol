@@ -970,7 +970,9 @@ contract TestFeeProjectDeployer is Test {
         assertEq(config.stageConfigurations[0].splits[0].beneficiary, op, "Split beneficiary matches");
 
         for (uint256 i = 0; i < config.stageConfigurations[0].autoIssuances.length; i++) {
-            assertEq(config.stageConfigurations[0].autoIssuances[i].beneficiary, op, "Auto issuance beneficiary matches");
+            assertEq(
+                config.stageConfigurations[0].autoIssuances[i].beneficiary, op, "Auto issuance beneficiary matches"
+            );
         }
     }
 
