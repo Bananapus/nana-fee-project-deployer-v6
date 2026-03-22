@@ -32,7 +32,7 @@ This repo contains no runtime contracts (`src/` does not exist). All privileged 
 
 | Function | Required Role | Permission ID | Scope | What It Does |
 |----------|--------------|---------------|-------|-------------|
-| `setSplitOperatorOf()` | Current split operator | `SET_SPLIT_GROUPS`, `SET_BUYBACK_POOL`, `SET_BUYBACK_TWAP`, `SET_PROJECT_URI`, `ADD_PRICE_FEED`, `SUCKER_SAFETY`, `ADD_SWAP_TERMINAL_POOL`, `SET_BUYBACK_HOOK`, `SET_SWAP_TERMINAL` (all 9 checked) | Project #1 | Transfers split operator role to a new address |
+| `setSplitOperatorOf()` | Current split operator | `SET_SPLIT_GROUPS`, `SET_BUYBACK_POOL`, `SET_BUYBACK_TWAP`, `SET_PROJECT_URI`, `ADD_PRICE_FEED`, `SUCKER_SAFETY`, `SET_BUYBACK_HOOK`, `SET_ROUTER_TERMINAL`, `SET_TOKEN_METADATA` (all 9 checked) | Project #1 | Transfers split operator role to a new address |
 | `deploySuckersFor()` | Split operator | Same 9 permissions (checked via `isSplitOperatorOf`) | Project #1 | Deploys new cross-chain suckers; only works if `extraMetadata` bit 2 is set (it is: value `4`) |
 | `autoIssueFor()` | Anyone | None | Per-stage, per-beneficiary | Mints pre-configured auto-issuance tokens for a beneficiary once a stage starts; one-time per stage per beneficiary |
 | `burnHeldTokensOf()` | Anyone | None | Project #1 | Burns any project tokens held by the `REVDeployer` contract (from reserved token distribution leftovers) |
@@ -81,9 +81,9 @@ The split operator (Sphinx safe multisig) can perform the following ongoing oper
 4. **Set project URI** (`SET_PROJECT_URI`) -- Update the project's metadata URI.
 5. **Add price feed** (`ADD_PRICE_FEED`) -- Add price feeds for currency conversions.
 6. **Sucker safety** (`SUCKER_SAFETY`) -- Manage sucker safety settings (emergency hatch, deprecation).
-7. **Add swap terminal pool** (`ADD_SWAP_TERMINAL_POOL`) -- Add new swap pools to the router terminal.
-8. **Set buyback hook** (`SET_BUYBACK_HOOK`) -- Configure the buyback hook.
-9. **Set swap terminal** (`SET_SWAP_TERMINAL`) -- Configure the swap terminal.
+7. **Set buyback hook** (`SET_BUYBACK_HOOK`) -- Configure or lock the buyback hook.
+8. **Set router terminal** (`SET_ROUTER_TERMINAL`) -- Configure or lock the router terminal.
+9. **Set token metadata** (`SET_TOKEN_METADATA`) -- Update the project token's metadata.
 10. **Deploy new suckers** -- Deploy additional cross-chain suckers (enabled by `extraMetadata` bit 2).
 11. **Transfer split operator role** -- Hand off the split operator role to a new address via `setSplitOperatorOf()`.
 
