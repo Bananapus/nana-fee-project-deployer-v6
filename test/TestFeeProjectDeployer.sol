@@ -17,8 +17,6 @@ import {REVConfig} from "@rev-net/core-v6/src/structs/REVConfig.sol";
 import {REVDescription} from "@rev-net/core-v6/src/structs/REVDescription.sol";
 import {REVStageConfig} from "@rev-net/core-v6/src/structs/REVStageConfig.sol";
 import {REVSuckerDeploymentConfig} from "@rev-net/core-v6/src/structs/REVSuckerDeploymentConfig.sol";
-import {IREVDeployer} from "@rev-net/core-v6/src/interfaces/IREVDeployer.sol";
-
 import {JBSuckerDeployerConfig} from "@bananapus/suckers-v6/src/structs/JBSuckerDeployerConfig.sol";
 import {JBTokenMapping} from "@bananapus/suckers-v6/src/structs/JBTokenMapping.sol";
 import {IJBSuckerDeployer} from "@bananapus/suckers-v6/src/interfaces/IJBSuckerDeployer.sol";
@@ -144,6 +142,7 @@ contract FeeProjectConfigBuilder {
             autoIssuances: issuanceConfs,
             splitPercent: 6200,
             splits: splits,
+            // forge-lint: disable-next-line(unsafe-typecast)
             initialIssuance: uint112(10_000 * DECIMAL_MULTIPLIER),
             issuanceCutFrequency: 360 days,
             issuanceCutPercent: 380_000_000,
@@ -263,6 +262,7 @@ contract TestFeeProjectDeployer is Test {
     function test_projectUriIsIPFS() public pure {
         // Verify it starts with ipfs://
         bytes memory uri = bytes(PROJECT_URI);
+        // forge-lint: disable-start(unsafe-typecast)
         assertEq(uint8(uri[0]), uint8(bytes1("i")));
         assertEq(uint8(uri[1]), uint8(bytes1("p")));
         assertEq(uint8(uri[2]), uint8(bytes1("f")));
@@ -270,6 +270,7 @@ contract TestFeeProjectDeployer is Test {
         assertEq(uint8(uri[4]), uint8(bytes1(":")));
         assertEq(uint8(uri[5]), uint8(bytes1("/")));
         assertEq(uint8(uri[6]), uint8(bytes1("/")));
+        // forge-lint: disable-end(unsafe-typecast)
     }
 
     function test_nativeCurrency() public pure {
@@ -297,6 +298,7 @@ contract TestFeeProjectDeployer is Test {
         uint256 rawIssuance = 10_000 * DECIMAL_MULTIPLIER;
         assertEq(rawIssuance, 10_000e18, "Raw issuance should be 10,000e18");
         assertLt(rawIssuance, type(uint112).max, "Issuance must fit in uint112");
+        // forge-lint: disable-next-line(unsafe-typecast)
         assertEq(uint112(rawIssuance), rawIssuance, "uint112 cast must not truncate");
     }
 
@@ -345,6 +347,7 @@ contract TestFeeProjectDeployer is Test {
 
     function test_stageInitialIssuance() public view {
         REVStageConfig[] memory stages = builder.buildStageConfigurations(operatorAddr);
+        // forge-lint: disable-next-line(unsafe-typecast)
         assertEq(stages[0].initialIssuance, uint112(10_000 * DECIMAL_MULTIPLIER), "Initial issuance is 10,000 tokens");
     }
 
@@ -668,6 +671,7 @@ contract TestFeeProjectDeployer is Test {
         REVStageConfig memory stage = recordedConfig.stageConfigurations[0];
         assertEq(stage.startsAtOrAfter, NANA_START_TIME, "Stage start time recorded");
         assertEq(stage.splitPercent, 6200, "Split percent recorded");
+        // forge-lint: disable-next-line(unsafe-typecast)
         assertEq(stage.initialIssuance, uint112(10_000 * DECIMAL_MULTIPLIER), "Initial issuance recorded");
         assertEq(stage.issuanceCutFrequency, 360 days, "Issuance cut frequency recorded");
         assertEq(stage.issuanceCutPercent, 380_000_000, "Issuance cut percent recorded");
@@ -818,10 +822,12 @@ contract TestFeeProjectDeployer is Test {
     // ====================================================================
 
     function test_erc20SaltIsDeterministic() public pure {
+        // forge-lint: disable-next-line(unsafe-typecast)
         assertEq(ERC20_SALT, bytes32("_NANA_ERC20_SALTV6__"), "ERC20 salt matches expected");
     }
 
     function test_suckerSaltIsDeterministic() public pure {
+        // forge-lint: disable-next-line(unsafe-typecast)
         assertEq(SUCKER_SALT, bytes32("_NANA_SUCKER_SALTV6__"), "Sucker salt matches expected");
     }
 
