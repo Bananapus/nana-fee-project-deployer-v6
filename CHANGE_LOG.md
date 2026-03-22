@@ -2,6 +2,13 @@
 
 This document describes all changes between `nana-fee-project-deployer` (v5) and `nana-fee-project-deployer-v6` (v6).
 
+## Summary
+
+- **Simplified deploy script**: Reduced from 6 deployment libraries to 4 — buyback hook, 721 hook, and loan configuration all removed from the deploy flow.
+- **Swap terminal → Router terminal**: `SwapTerminalDeploymentLib` replaced by `RouterTerminalDeploymentLib`, reflecting the swap terminal's replacement by the more general router terminal.
+- **Cross-VM support**: `JBTokenMapping.remoteToken` changed from `address` to `bytes32` for Solana/SVM compatibility.
+- **Test suite added**: First test coverage for the fee project deployer (~900 lines covering revnet config, chain-specific suckers, and deployment flow).
+
 ---
 
 ## 1. Breaking Changes
@@ -18,9 +25,13 @@ This document describes all changes between `nana-fee-project-deployer` (v5) and
 - **v5:** Imported `BuybackDeploymentLib`, `REVBuybackHookConfig`, `REVBuybackPoolConfig`, and configured a Uniswap V4 TWAP-based buyback hook with a 10,000 fee tier and 2-day TWAP window.
 - **v6:** All buyback hook references removed entirely. The `BuybackDeployment` state variable, its deployment library import, and the `REVBuybackHookConfig`/`REVBuybackPoolConfig` structs are gone. The `deployFor` call no longer passes a `buybackHookConfiguration` argument.
 
+> **Why removed**: Buyback pools are now auto-initialized by `revnet-core-v6` via an immutable `BUYBACK_HOOK` registry during deployment. The fee project deployer no longer needs to configure them manually — this eliminates a deployment-time configuration step and ensures all revnets get consistent buyback behavior.
+
 ### 721 hook deployment removed
 - **v5:** Imported `Hook721DeploymentLib` and loaded `Hook721Deployment hook` from on-chain deployment artifacts.
 - **v6:** No 721 hook deployment library is imported or loaded. (The `@bananapus/721-hook-v6` dependency remains in `package.json` but is only used in the test file, not the deploy script.)
+
+> **Why removed**: The omnichain deployer (`nana-omnichain-deployers-v6`) now automatically deploys a default 721 hook for every project, even without tiers configured. The fee project deployer no longer needs to handle this independently.
 
 ### Swap terminal replaced by router terminal
 - **v5:** Used `SwapTerminalDeploymentLib` with `SwapTerminalDeployment swapTerminal`. The second terminal was configured as `IJBTerminal(address(swapTerminal.registry))`.
@@ -29,6 +40,8 @@ This document describes all changes between `nana-fee-project-deployer` (v5) and
 ### Loan configuration removed from `REVConfig`
 - **v5:** `REVConfig` included `loanSources` (an array of `REVLoanSource`) and `loans` (address of `revnet.loans`). A single loan source was configured for native token via `core.terminal`.
 - **v6:** `REVConfig` no longer has `loanSources` or `loans` fields. Loans are now configured separately from the revnet deployment.
+
+> **Why removed**: Loans are now managed via a single immutable `LOANS` address on the `REVDeployer`, with fund access limits derived automatically from terminal configurations. Per-revnet loan source configuration was unnecessary complexity.
 
 ### `JBTokenMapping.remoteToken` type changed
 - **v5:** `remoteToken` was `address` -- set directly to `JBConstants.NATIVE_TOKEN`.
