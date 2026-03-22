@@ -28,7 +28,6 @@ Since this repo contains only a deployment script (no runtime contracts), these 
 - `splitPercent` -- `6200`; 62% of issuance to reserved splits (basis points)
 - `extraMetadata` -- `4`; bit 2 set to allow deploying suckers via `deploySuckersFor()`
 - `minGas` -- `200,000`; minimum gas for bridge operations
-- `minBridgeAmount` -- `0.01 ether`; dust prevention threshold for sucker bridges
 
 **Auto-issuance amounts** (pre-minted tokens per chain, all to `operator`):
 
@@ -52,11 +51,11 @@ Since this repo contains only a deployment script (no runtime contracts), these 
 3. `DeployScript.revnet` -- loaded from `RevnetCoreDeploymentLib.getDeployment()` with `basic_deployer` address
 4. `DeployScript.routerTerminal` -- loaded from `RouterTerminalDeploymentLib.getDeployment()` with `registry` address
 5. `DeployScript.operator = safeAddress()` -- set to the Sphinx multisig on the current chain
-6. `JBProjects.approve(revnet.basic_deployer, 1)` -- grants `REVBasicDeployer` ERC-721 approval for project #1
+6. `JBProjects.approve(revnet.basic_deployer, 1)` -- grants `REVDeployer` ERC-721 approval for project #1
 7. `revnet.basic_deployer.deployFor(1, revnetConfiguration, terminalConfigurations, suckerDeploymentConfiguration)` triggers internally:
    - `JBDirectory.controllerOf[1]` -- set to `JBController`
    - `JBDirectory.terminalsOf[1]` -- set to `[JBMultiTerminal, JBRouterTerminalRegistry]`
-   - `JBMultiTerminal.accountingContextForTokenOf[1][NATIVE_TOKEN]` -- registered with 18 decimals
+   - `JBMultiTerminal.accountingContextForTokenOf(1, NATIVE_TOKEN)` -- registered with 18 decimals
    - `JBRulesets` -- ruleset queued with encoded stage parameters (weight, duration, metadata)
    - `JBSplits.splitsOf[1][rulesetId][groupId]` -- 100% split to `operator`
    - `JBTokens` -- NANA ERC-20 deployed via CREATE2 with `ERC20_SALT`
@@ -67,7 +66,7 @@ Since this repo contains only a deployment script (no runtime contracts), these 
 
 No events are emitted directly by `DeployScript`. The downstream contracts called during `deployFor` emit:
 
-- `Approval(address indexed owner, address indexed approved, uint256 indexed tokenId)` -- from `JBProjects` (ERC-721) when the script approves `REVBasicDeployer` for project #1
+- `Approval(address indexed owner, address indexed approved, uint256 indexed tokenId)` -- from `JBProjects` (ERC-721) when the script approves `REVDeployer` for project #1
 - `RulesetQueued(uint256 indexed rulesetId, uint256 indexed projectId, uint256 duration, uint256 weight, uint256 weightCutPercent, IJBRulesetApprovalHook approvalHook, uint256 metadata, uint256 mustStartAtOrAfter, address caller)` -- from `JBRulesets` for each queued ruleset
 - `LaunchRulesets(uint256 rulesetId, uint256 projectId, string memo, address caller)` -- from `JBController` when rulesets are launched for the existing project
 - `DeployERC20(uint256 indexed projectId, address indexed deployer, bytes32 salt, bytes32 saltHash, address caller)` -- from `JBController` when the NANA token is deployed
@@ -98,7 +97,7 @@ No events are emitted directly by `DeployScript`. The downstream contracts calle
 
 ## Journey 2: Protocol Fees Flow to Project #1
 
-**Entry point**: Fees are triggered by `JBMultiTerminal.sendPayoutsOf(uint256 projectId, address token, uint256 amount, uint256 currency)` and `JBMultiTerminal.cashOutTokensOf(address holder, uint256 projectId, uint256 cashOutCount, address tokenToReclaim, uint256 minTokensReclaimed, address payable beneficiary, bytes metadata)` on any Juicebox V6 project. Fees are then paid to project #1 via `JBMultiTerminal.pay(...)`.
+**Entry point**: Fees are triggered by `JBMultiTerminal.sendPayoutsOf(uint256 projectId, address token, uint256 amount, uint256 currency, uint256 minTokensPaidOut)` and `JBMultiTerminal.cashOutTokensOf(address holder, uint256 projectId, uint256 cashOutCount, address tokenToReclaim, uint256 minTokensReclaimed, address payable beneficiary, bytes metadata)` on any Juicebox V6 project. Fees are then paid to project #1 via `JBMultiTerminal.pay(...)`.
 
 **Who can call**: Anyone. Fee collection is automatic -- any user interacting with any Juicebox V6 project triggers fee accrual when applicable.
 
@@ -106,7 +105,7 @@ No events are emitted directly by `DeployScript`. The downstream contracts calle
 
 - `FEE` -- `25` (2.5% fee, as a fraction of `MAX_FEE = 1000`); defined in `JBMultiTerminal`, not in this script
 - `_FEE_HOLDING_SECONDS` -- `2,419,200` (28 days); held fees cannot be processed until this period elapses
-- `FEE_BENEFICIARY_PROJECT_ID` -- `1`; hardcoded in `JBMultiTerminal` to route all fees to project #1
+- `_FEE_BENEFICIARY_PROJECT_ID` -- `1`; hardcoded in `JBMultiTerminal` to route all fees to project #1
 
 ### Preconditions
 
@@ -134,7 +133,7 @@ No events are emitted by this deployment script. The fee flow events are emitted
 
 ### Edge Cases
 
-- The fee routing in `JBMultiTerminal` targets `FEE_BENEFICIARY_PROJECT_ID = 1` (defined in nana-core, not in this script). If that constant were different, fees would route elsewhere.
+- The fee routing in `JBMultiTerminal` targets `_FEE_BENEFICIARY_PROJECT_ID = 1` (defined in nana-core, not in this script). If that constant were different, fees would route elsewhere.
 - The terminal configured for project #1 must accept the same tokens that other terminals charge fees in (native token). If a project charges fees in a token that project #1's terminal does not accept, the fee payment will fail (try-catch in `JBMultiTerminal` catches this -- `FeeReverted` is emitted and the fee amount is returned to the originating project's balance).
 - The auto-issuance tokens represent a bootstrap allocation that dilutes future fee payers. Verify the amounts are proportionate to the intended economics.
 - When `cashOutTaxRate == 0` on the paying project, fees on cashouts only apply up to the project's unconsumed fee-free surplus (`_feeFreeSurplusOf`).
@@ -144,7 +143,7 @@ No events are emitted by this deployment script. The fee flow events are emitted
 
 ## Journey 3: Cross-Chain Bridging via Suckers
 
-**Entry point**: `JBSucker.prepare(...)` on the source chain (specific function signature varies by sucker implementation: `JBOptimismSucker`, `JBBaseSucker`, `JBArbitrumSucker`), followed by `JBSucker.claim(...)` on the destination chain.
+**Entry point**: `JBSucker.prepare(...)` on the source chain to insert tokens into the outbox merkle tree, then `JBSucker.toRemote(token)` to send the outbox root and bridged assets to the remote chain, followed by `JBSucker.claim(...)` on the destination chain. The `prepare()` function has the same signature across all sucker implementations; only `toRemote` contains implementation-specific bridge logic (`JBOptimismSucker`, `JBBaseSucker`, `JBArbitrumSucker`, etc.).
 
 **Who can call**: Any NANA token holder. The sucker contracts are permissionless for bridging operations.
 
@@ -153,7 +152,6 @@ No events are emitted by this deployment script. The fee flow events are emitted
 - `localToken` -- `JBConstants.NATIVE_TOKEN` (`0x000000000000000000000000000000000000EEEe`); the source chain token
 - `remoteToken` -- `bytes32(uint256(uint160(JBConstants.NATIVE_TOKEN)))`; the destination chain token (encoded as bytes32)
 - `minGas` -- `200,000`; minimum gas for the bridge relay operation
-- `minBridgeAmount` -- `0.01 ether`; dust prevention; amounts below this cannot be bridged
 - `salt` -- `"_NANA_SUCKER_SALTV6__"`; deterministic sucker addresses across chains via CREATE2
 
 ### Preconditions
@@ -163,10 +161,10 @@ No events are emitted by this deployment script. The fee flow events are emitted
 
 ### State Changes
 
-1. `JBSucker.outboxTreeOf[NATIVE_TOKEN].count` -- incremented when user's tokens are deposited into the outbox merkle tree on the source chain
-2. `JBTokens.totalBalanceOf[user][1]` -- decremented on the source chain (tokens burned or locked)
-3. `JBSucker.inboxTreeOf[NATIVE_TOKEN]` -- updated with the new merkle root on the destination chain when the bridge message arrives
-4. `JBTokens.totalBalanceOf[user][1]` -- incremented on the destination chain when the user claims with a valid merkle proof
+1. `JBSucker._outboxOf[NATIVE_TOKEN].tree.count` -- incremented when user's tokens are deposited into the outbox merkle tree on the source chain
+2. `JBTokens.totalBalanceOf(user, 1)` -- decremented on the source chain (tokens burned or locked)
+3. `JBSucker._inboxOf[NATIVE_TOKEN]` -- updated with the new merkle root on the destination chain when the bridge message arrives
+4. `JBTokens.totalBalanceOf(user, 1)` -- incremented on the destination chain when the user claims with a valid merkle proof
 
 ### Events
 
@@ -180,7 +178,7 @@ No events are emitted by this deployment script. The bridging events are emitted
 ### Edge Cases
 
 - Token mappings are native-to-native only. If additional tokens need bridging, new mappings would need to be configured (requires `MAP_SUCKER_TOKEN` permission).
-- The `minBridgeAmount = 0.01 ether` prevents dust-amount bridges that would be uneconomical relative to bridge gas costs.
+- Anti-spam is handled by the global `toRemoteFee` on every `toRemote()` call, paid to the fee project, rather than a per-token minimum bridge amount.
 - The `minGas = 200,000` must be sufficient for the bridge operation on each target chain. Insufficient gas causes the bridge message to fail on the destination chain.
 - The sucker salt (`"_NANA_SUCKER_SALTV6__"`) produces deterministic addresses via CREATE2, ensuring consistency across chains for peer discovery.
 - On Ethereum, 3 suckers are deployed (one per L2). On each L2, only 1 sucker is deployed (back to mainnet). Direct L2-to-L2 bridging is not supported; tokens must route through mainnet.
