@@ -178,4 +178,52 @@ forge build
 
 The script itself cannot be meaningfully tested in isolation because it depends on pre-deployed contracts across multiple chains. Review is purely parameter and logic inspection.
 
+## Verification Commands
+
+After deployment, verify key state on-chain:
+
+```bash
+# Verify project #1 exists and is owned by the expected safe
+cast call $PROJECTS "ownerOf(uint256)" 1 --rpc-url $RPC_URL
+
+# Verify the revnet deployer is the controller
+cast call $DIRECTORY "controllerOf(uint256)" 1 --rpc-url $RPC_URL
+
+# Verify terminal is registered
+cast call $DIRECTORY "terminalsOf(uint256)" 1 --rpc-url $RPC_URL
+
+# Verify the ERC-20 token was deployed with correct name/symbol
+cast call $TOKENS "tokenOf(uint256)" 1 --rpc-url $RPC_URL
+# Then: cast call $TOKEN_ADDRESS "name()" --rpc-url $RPC_URL
+# Expected: "Bananapus (Juicebox V6)"
+# And: cast call $TOKEN_ADDRESS "symbol()" --rpc-url $RPC_URL
+# Expected: "NANA"
+
+# Verify the current ruleset has expected parameters
+cast call $CONTROLLER "currentRulesetOf(uint256)" 1 --rpc-url $RPC_URL
+```
+
+## Auto-Issuance Amounts Explained
+
+Auto-issuance amounts represent pre-minted token allocations to the OPERATOR (Sphinx safe). These are claimed once per stage per beneficiary via `REVDeployer.autoIssueFor()`. The amounts differ per chain because the NANA revnet is deployed cross-chain via suckers, and each chain's allocation reflects its expected share of protocol activity:
+
+- **Ethereum mainnet** (~34.6T wei-tokens): Largest allocation, primary deployment chain.
+- **Base** (~1.6T wei-tokens): Second-largest L2 ecosystem.
+- **Optimism** (~6.3B wei-tokens): Smaller but established L2.
+- **Arbitrum** (~105M wei-tokens): Smallest initial allocation.
+
+All amounts are in 18-decimal precision (multiply by 10^-18 for human-readable token counts).
+
+## Previous Audit Findings
+
+No prior formal audit has been conducted on this deployment script. The script is validated through Sphinx's simulation process and manual parameter review.
+
+## Compiler and Version Info
+
+- **Solidity**: 0.8.26
+- **EVM target**: Cancun
+- **Optimizer**: via-IR, 200 runs
+- **Framework**: Foundry + Sphinx
+- **Build**: `forge build`
+
 Go break it.
