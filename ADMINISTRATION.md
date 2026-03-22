@@ -2,6 +2,12 @@
 
 Admin privileges and their scope in nana-fee-project-deployer-v6.
 
+## Protocol Context
+
+This repo deploys **project #1** -- the Juicebox V6 fee project. It is a revnet (autonomous project) governed by the rules in [revnet-core-v6](https://github.com/Bananapus/revnet-core-v6). All admin constraints, split operator permissions, and autonomous design guarantees documented in revnet-core-v6's ADMINISTRATION.md apply here.
+
+The fee project receives the 2.5% protocol fee from all `JBMultiTerminal` operations (payouts, surplus allowance usage, and cash outs with non-zero tax rates). The fee rate and fee beneficiary (project ID 1) are hardcoded constants in `JBMultiTerminal` and `REVDeployer` respectively -- see [nana-core-v6 ADMINISTRATION.md](https://github.com/Bananapus/nana-core-v6/blob/main/ADMINISTRATION.md) for the full permission model.
+
 ## Roles
 
 | Role | Who | How Assigned |
@@ -51,6 +57,19 @@ The following parameters are hardcoded in `Deploy.s.sol` and become immutable on
 | Chains | Ethereum, Optimism, Base, Arbitrum | Suckers deployed for cross-chain bridging |
 | Split beneficiary | Sphinx safe multisig | 100% of reserved token splits go to `OPERATOR` |
 | Auto-issuances | ~34,614 NANA (mainnet), ~1,604 NANA (Base), ~6.27 NANA (OP), ~0.105 NANA (Arb) | Pre-minted to `OPERATOR` per chain |
+
+## Auto-Issuance Derivation
+
+The auto-issuance amounts represent tokens pre-allocated to the Sphinx safe multisig as compensation for deployment costs and early contributions. The amounts differ per chain because they are denominated in the fee project's token ($NANA) at the initial issuance rate of 10,000 NANA per ETH, calibrated to the ETH value of deployment costs on each chain:
+
+| Chain | Auto-Issuance | Approximate ETH Equivalent |
+|-------|--------------|---------------------------|
+| Ethereum | ~34,614 NANA | ~3.46 ETH |
+| Base | ~1,604 NANA | ~0.16 ETH |
+| Optimism | ~6.27 NANA | ~0.000627 ETH |
+| Arbitrum | ~0.105 NANA | ~0.0000105 ETH |
+
+These amounts are one-time claims. Once `autoIssueFor()` is called for a beneficiary on a given stage, the same beneficiary cannot claim again for that stage.
 
 ## Post-Deployment Administration
 
