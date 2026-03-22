@@ -15,18 +15,22 @@
 - **Start time.** `NANA_START_TIME` is hardcoded. If deployment occurs after this timestamp, the revnet stage starts retroactively.
 - **L2 sucker deployer fallback chain.** On L2s, the script falls back through `optimismDeployer > baseDeployer > arbitrumDeployer`. If the wrong deployer is selected, suckers connect to the wrong L1 endpoint. Reverts if no deployer is found.
 - **Single operator.** All splits direct 100% of payouts to one operator address (the multisig).
+- **splitPercent sensitivity.** The fee project uses `splitPercent: 6200` (62% of tokens go to reserved splits). If this value is wrong by even 100 basis points, the fee revenue distribution is permanently affected across the entire protocol. At $10M annual fee revenue, a 1% error redistributes ~$100k/year to wrong recipients. The split is set in `_makeRulesetConfigurations` and verified by the revnet deployer's stage validation — but the validation only checks format, not intent.
+- **cashOutTaxRate sensitivity.** The fee project uses `cashOutTaxRate: 1000` (10%). This determines how much surplus is retained when token holders cash out. At 10%, cashing out 1M NANA tokens with 10M ETH surplus returns ~900k ETH equivalent. If the rate were accidentally set to 100 (1%), retention drops to ~10k ETH — a 90x difference in protocol surplus retention per cash-out.
+- **Cross-reference: deploy-all-v6.** The fee project is ALSO configured in `deploy-all-v6` Phase 08b. Both deployment scripts must produce identical configurations. See [deploy-all-v6 RISKS.md](../deploy-all-v6/RISKS.md) section 4 for the full parameter risk analysis. Divergence between the two scripts means the fee project behaves differently depending on which script was used.
 
 ## 3. Project #1 Significance
 
 This IS the fee project -- all protocol fees across the Juicebox ecosystem flow here. Maximum scrutiny on deployment parameters is warranted. This is a one-time deployment.
 
-## 4. Post-Deployment
+## 4. Post-Deployment Risks
 
-Once deployed, the fee project's stage parameters are immutable (revnet design). The only ongoing operations are:
-- Receiving protocol fees (automatic)
-- Distributing payouts via splits (permissioned to operator)
-- Cross-chain bridging via suckers
-- Issuance decay over time (38% cut every 360 days)
+Once deployed, the fee project's stage parameters are immutable (revnet design). Ongoing risks:
+
+- **Terminal availability.** If the fee project's primary terminal is removed or becomes unavailable, all protocol fee payments (`_processFee` in `JBMultiTerminal`) fail. The try-catch in `_processFee` returns fees to originating projects — fees are silently forgiven, not lost. But sustained terminal unavailability means the protocol collects zero fees.
+- **Sucker bridge liveness.** Cross-chain bridging via suckers depends on the fee project having a functioning sucker pair on each chain. A deprecated or bricked sucker on one chain isolates that chain's fee token holders.
+- **Issuance decay compounding.** With 38% cut every 360 days, the fee project's issuance weight drops to ~1% of initial after ~10 years. Late contributors receive orders of magnitude fewer tokens per ETH. This is by design (early contributor premium) but means the fee project's token distribution is heavily front-loaded.
+- **Split operator responsibility.** The operator (Sphinx Safe multisig) controls payout distribution. If the multisig loses quorum (key loss, signer unavailability), payouts cannot be triggered. Reserved tokens continue accumulating but cannot be distributed until the operator acts.
 
 ## 5. Invariants to Verify
 
@@ -35,3 +39,6 @@ Once deployed, the fee project's stage parameters are immutable (revnet design).
 - Sucker pairs connect the correct chains.
 - Auto-issuance amounts match expected per-chain distribution.
 - Operator address is the Sphinx safe, not an individual.
+- Fee project configuration matches `deploy-all-v6` Phase 08b parameters exactly (splitPercent, cashOutTaxRate, issuanceCutFrequency, auto-issuance amounts).
+- The fee project's primary terminal accepts NATIVE_TOKEN on every deployed chain.
+- After deployment, the fee project NFT is owned by REVDeployer (not the Sphinx Safe or any EOA).
