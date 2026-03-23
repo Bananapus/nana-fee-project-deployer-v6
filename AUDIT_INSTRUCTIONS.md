@@ -6,7 +6,7 @@ You are auditing the deployment script for Juicebox V6's fee project (project #1
 
 **In scope:**
 ```
-script/Deploy.s.sol    # Sphinx deployment script (~198 lines)
+script/Deploy.s.sol    # Sphinx deployment script (~204 lines)
 ```
 
 **Out of scope:** All dependencies (nana-core, revnet-core, nana-suckers, nana-router-terminal, Sphinx plugin), node_modules, test files, forge-std. There is no `src/` directory -- this repo exists solely to deploy project #1.
@@ -134,7 +134,7 @@ suckers.optimismDeployer != address(0)
 - On an L2, this selects the first non-zero deployer in priority order: OP > Base > Arbitrum.
 - If all three are `address(0)`, the `arbitrumDeployer` (zero address) is used, and the subsequent check reverts: `"L2 > L1 Sucker is not configured"`.
 - Verify this logic is correct for each target L2. On Base, `suckers.optimismDeployer` would be `address(0)` and `suckers.baseDeployer` would be non-zero, so Base correctly uses `baseDeployer`.
-- Verify that the `tokenMappings` (native token to native token, `minGas: 200_000`, `minBridgeAmount: 0.01 ether`) are correct for all bridge types.
+- Verify that the `tokenMappings` (native token to native token, `minGas: 200_000`) are correct for all bridge types.
 
 ### 5. Project #1 Approval Flow
 
