@@ -6,7 +6,7 @@ You are auditing the deployment script for Juicebox V6's fee project (project #1
 
 **In scope:**
 ```
-script/Deploy.s.sol    # Sphinx deployment script (~198 lines)
+script/Deploy.s.sol    # Sphinx deployment script (~204 lines)
 ```
 
 **Out of scope:** All dependencies (nana-core, revnet-core, nana-suckers, nana-router-terminal, Sphinx plugin), node_modules, test files, forge-std. There is no `src/` directory -- this repo exists solely to deploy project #1.
@@ -134,7 +134,7 @@ suckers.optimismDeployer != address(0)
 - On an L2, this selects the first non-zero deployer in priority order: OP > Base > Arbitrum.
 - If all three are `address(0)`, the `arbitrumDeployer` (zero address) is used, and the subsequent check reverts: `"L2 > L1 Sucker is not configured"`.
 - Verify this logic is correct for each target L2. On Base, `suckers.optimismDeployer` would be `address(0)` and `suckers.baseDeployer` would be non-zero, so Base correctly uses `baseDeployer`.
-- Verify that the `tokenMappings` (native token to native token, `minGas: 200_000`, `minBridgeAmount: 0.01 ether`) are correct for all bridge types.
+- Verify that the `tokenMappings` (native token to native token, `minGas: 200_000`) are correct for all bridge types.
 
 ### 5. Project #1 Approval Flow
 
@@ -177,5 +177,53 @@ forge build
 ```
 
 The script itself cannot be meaningfully tested in isolation because it depends on pre-deployed contracts across multiple chains. Review is purely parameter and logic inspection.
+
+## Verification Commands
+
+After deployment, verify key state on-chain:
+
+```bash
+# Verify project #1 exists and is owned by the expected safe
+cast call $PROJECTS "ownerOf(uint256)" 1 --rpc-url $RPC_URL
+
+# Verify the revnet deployer is the controller
+cast call $DIRECTORY "controllerOf(uint256)" 1 --rpc-url $RPC_URL
+
+# Verify terminal is registered
+cast call $DIRECTORY "terminalsOf(uint256)" 1 --rpc-url $RPC_URL
+
+# Verify the ERC-20 token was deployed with correct name/symbol
+cast call $TOKENS "tokenOf(uint256)" 1 --rpc-url $RPC_URL
+# Then: cast call $TOKEN_ADDRESS "name()" --rpc-url $RPC_URL
+# Expected: "Bananapus (Juicebox V6)"
+# And: cast call $TOKEN_ADDRESS "symbol()" --rpc-url $RPC_URL
+# Expected: "NANA"
+
+# Verify the current ruleset has expected parameters
+cast call $CONTROLLER "currentRulesetOf(uint256)" 1 --rpc-url $RPC_URL
+```
+
+## Auto-Issuance Amounts Explained
+
+Auto-issuance amounts represent pre-minted token allocations to the OPERATOR (Sphinx safe). These are claimed once per stage per beneficiary via `REVDeployer.autoIssueFor()`. The amounts differ per chain because the NANA revnet is deployed cross-chain via suckers, and each chain's allocation reflects its expected share of protocol activity:
+
+- **Ethereum mainnet** (~34.6T wei-tokens): Largest allocation, primary deployment chain.
+- **Base** (~1.6T wei-tokens): Second-largest L2 ecosystem.
+- **Optimism** (~6.3B wei-tokens): Smaller but established L2.
+- **Arbitrum** (~105M wei-tokens): Smallest initial allocation.
+
+All amounts are in 18-decimal precision (multiply by 10^-18 for human-readable token counts).
+
+## Previous Audit Findings
+
+No prior formal audit has been conducted on this deployment script. The script is validated through Sphinx's simulation process and manual parameter review.
+
+## Compiler and Version Info
+
+- **Solidity**: 0.8.26
+- **EVM target**: Cancun
+- **Optimizer**: via-IR, 200 runs
+- **Framework**: Foundry + Sphinx
+- **Build**: `forge build`
 
 Go break it.

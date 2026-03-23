@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import "@bananapus/core-v6/script/helpers/CoreDeploymentLib.sol";
-import "@bananapus/suckers-v6/script/helpers/SuckerDeploymentLib.sol";
-import "@rev-net/core-v6/script/helpers/RevnetCoreDeploymentLib.sol";
-import "@bananapus/router-terminal-v6/script/helpers/RouterTerminalDeploymentLib.sol";
+import {CoreDeployment, CoreDeploymentLib} from "@bananapus/core-v6/script/helpers/CoreDeploymentLib.sol";
+import {SuckerDeployment, SuckerDeploymentLib} from "@bananapus/suckers-v6/script/helpers/SuckerDeploymentLib.sol";
+import {
+    RevnetCoreDeployment,
+    RevnetCoreDeploymentLib
+} from "@rev-net/core-v6/script/helpers/RevnetCoreDeploymentLib.sol";
+import {
+    RouterTerminalDeployment,
+    RouterTerminalDeploymentLib
+} from "@bananapus/router-terminal-v6/script/helpers/RouterTerminalDeploymentLib.sol";
 
 import {JBConstants} from "@bananapus/core-v6/src/libraries/JBConstants.sol";
 import {JBCurrencyIds} from "@bananapus/core-v6/src/libraries/JBCurrencyIds.sol";
@@ -34,22 +40,22 @@ contract DeployScript is Script, Sphinx {
     /// @notice tracks the deployment of the router terminal.
     RouterTerminalDeployment routerTerminal;
 
-    bytes32 ERC20_SALT = "_NANA_ERC20_SALTV6__";
-    bytes32 SUCKER_SALT = "_NANA_SUCKER_SALTV6__";
-    string NAME = "Bananapus (Juicebox V6)";
-    string SYMBOL = "NANA";
-    string PROJECT_URI = "ipfs://QmWCgCaryfsJYBu5LczFuBz3UKK5VEU3BZFYp2mHJTLeRQ";
-    uint32 NATIVE_CURRENCY = uint32(uint160(JBConstants.NATIVE_TOKEN));
-    uint32 ETH_CURRENCY = JBCurrencyIds.ETH;
-    uint8 DECIMALS = 18;
-    uint256 DECIMAL_MULTIPLIER = 10 ** DECIMALS;
-    uint48 NANA_START_TIME = 1_740_089_444;
-    uint104 NANA_MAINNET_AUTO_ISSUANCE = 34_614_774_622_547_324_824_200;
-    uint104 NANA_BASE_AUTO_ISSUANCE = 1_604_412_323_715_200_204_800;
-    uint104 NANA_OP_AUTO_ISSUANCE = 6_266_215_368_602_910_600;
-    uint104 NANA_ARB_AUTO_ISSUANCE = 105_160_496_145_000_000;
+    bytes32 constant ERC20_SALT = "_NANA_ERC20_SALTV6__";
+    bytes32 constant SUCKER_SALT = "_NANA_SUCKER_SALTV6__";
+    string constant NAME = "Bananapus (Juicebox V6)";
+    string constant SYMBOL = "NANA";
+    string constant PROJECT_URI = "ipfs://QmWCgCaryfsJYBu5LczFuBz3UKK5VEU3BZFYp2mHJTLeRQ";
+    uint32 constant NATIVE_CURRENCY = uint32(uint160(JBConstants.NATIVE_TOKEN));
+    uint32 constant ETH_CURRENCY = JBCurrencyIds.ETH;
+    uint8 constant DECIMALS = 18;
+    uint256 constant DECIMAL_MULTIPLIER = 10 ** DECIMALS;
+    uint48 constant NANA_START_TIME = 1_740_089_444;
+    uint104 constant NANA_MAINNET_AUTO_ISSUANCE = 34_614_774_622_547_324_824_200;
+    uint104 constant NANA_BASE_AUTO_ISSUANCE = 1_604_412_323_715_200_204_800;
+    uint104 constant NANA_OP_AUTO_ISSUANCE = 6_266_215_368_602_910_600;
+    uint104 constant NANA_ARB_AUTO_ISSUANCE = 105_160_496_145_000_000;
 
-    address OPERATOR;
+    address operator;
 
     function configureSphinx() public override {
         // TODO: Update to contain revnet devs.
@@ -81,14 +87,14 @@ contract DeployScript is Script, Sphinx {
         );
 
         // Set the operator address to be the multisig.
-        OPERATOR = safeAddress();
+        operator = safeAddress();
 
         // Perform the deployment transactions.
         deploy();
     }
 
     function deploy() public sphinx {
-        uint256 FEE_PROJECT_ID = 1;
+        uint256 feeProjectId = 1;
 
         // The tokens that the project accepts and stores.
         JBAccountingContext[] memory accountingContextsToAccept = new JBAccountingContext[](1);
@@ -110,17 +116,17 @@ contract DeployScript is Script, Sphinx {
         splits[0] = JBSplit({
             percent: JBConstants.SPLITS_TOTAL_PERCENT,
             projectId: 0,
-            beneficiary: payable(OPERATOR),
+            beneficiary: payable(operator),
             preferAddToBalance: false,
             lockedUntil: 0,
             hook: IJBSplitHook(address(0))
         });
 
         REVAutoIssuance[] memory issuanceConfs = new REVAutoIssuance[](4);
-        issuanceConfs[0] = REVAutoIssuance({chainId: 1, count: NANA_MAINNET_AUTO_ISSUANCE, beneficiary: OPERATOR});
-        issuanceConfs[1] = REVAutoIssuance({chainId: 8453, count: NANA_BASE_AUTO_ISSUANCE, beneficiary: OPERATOR});
-        issuanceConfs[2] = REVAutoIssuance({chainId: 10, count: NANA_OP_AUTO_ISSUANCE, beneficiary: OPERATOR});
-        issuanceConfs[3] = REVAutoIssuance({chainId: 42_161, count: NANA_ARB_AUTO_ISSUANCE, beneficiary: OPERATOR});
+        issuanceConfs[0] = REVAutoIssuance({chainId: 1, count: NANA_MAINNET_AUTO_ISSUANCE, beneficiary: operator});
+        issuanceConfs[1] = REVAutoIssuance({chainId: 8453, count: NANA_BASE_AUTO_ISSUANCE, beneficiary: operator});
+        issuanceConfs[2] = REVAutoIssuance({chainId: 10, count: NANA_OP_AUTO_ISSUANCE, beneficiary: operator});
+        issuanceConfs[3] = REVAutoIssuance({chainId: 42_161, count: NANA_ARB_AUTO_ISSUANCE, beneficiary: operator});
         // The project's revnet stage configurations.
         REVStageConfig[] memory stageConfigurations = new REVStageConfig[](1);
         stageConfigurations[0] = REVStageConfig({
@@ -128,6 +134,7 @@ contract DeployScript is Script, Sphinx {
             autoIssuances: issuanceConfs,
             splitPercent: 6200, // 62%
             splits: splits,
+            // forge-lint: disable-next-line(unsafe-typecast)
             initialIssuance: uint112(10_000 * DECIMAL_MULTIPLIER),
             issuanceCutFrequency: 360 days,
             issuanceCutPercent: 380_000_000, // 38%
@@ -139,7 +146,7 @@ contract DeployScript is Script, Sphinx {
         REVConfig memory revnetConfiguration = REVConfig({
             description: REVDescription({name: NAME, ticker: SYMBOL, uri: PROJECT_URI, salt: ERC20_SALT}),
             baseCurrency: ETH_CURRENCY,
-            splitOperator: OPERATOR,
+            splitOperator: operator,
             stageConfigurations: stageConfigurations
         });
 
@@ -183,12 +190,12 @@ contract DeployScript is Script, Sphinx {
             REVSuckerDeploymentConfig({deployerConfigurations: suckerDeployerConfigurations, salt: SUCKER_SALT});
 
         // Approve the basic deployer to configure the project.
-        core.projects.approve({to: address(revnet.basic_deployer), tokenId: FEE_PROJECT_ID});
+        core.projects.approve({to: address(revnet.basic_deployer), tokenId: feeProjectId});
 
         // Deploy the NANA fee project.
         revnet.basic_deployer
             .deployFor({
-                revnetId: FEE_PROJECT_ID,
+                revnetId: feeProjectId,
                 configuration: revnetConfiguration,
                 terminalConfigurations: terminalConfigurations,
                 suckerDeploymentConfiguration: suckerDeploymentConfiguration
