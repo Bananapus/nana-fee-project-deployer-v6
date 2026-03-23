@@ -168,15 +168,22 @@ CoreDeploymentLib.getDeployment(vm.envOr("NANA_CORE_DEPLOYMENT_PATH", "node_modu
 
 ## Testing Setup
 
-This repo has no test files. The deployment script is validated through Sphinx's simulation and multi-chain proposal process. To build:
+The repo includes 3 test files (2,364 lines total, 75 test functions):
+
+| Test File | Tests | Lines | What It Covers |
+|-----------|-------|-------|----------------|
+| `TestFeeProjectDeployer.sol` | 67 | 1,059 | Unit tests for deployment parameter correctness, split configuration, terminal wiring, sucker strategy, and auto-issuance amounts |
+| `FeeProjectEdgeCases.t.sol` | 4 | 753 | Edge cases: zero-address handling, chain-specific sucker selection, project #1 approval flow |
+| `FeeProjectDeployerFork.t.sol` | 4 | 552 | Fork tests: end-to-end deployment on forked mainnet, post-deployment state verification |
 
 ```bash
 cd nana-fee-project-deployer-v6
 npm install
 forge build
+forge test -vvv
 ```
 
-The script itself cannot be meaningfully tested in isolation because it depends on pre-deployed contracts across multiple chains. Review is purely parameter and logic inspection.
+The deployment script also undergoes validation through Sphinx's simulation and multi-chain proposal process.
 
 ## Verification Commands
 
