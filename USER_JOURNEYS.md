@@ -54,10 +54,10 @@ Since this repo contains only a deployment script (no runtime contracts), these 
 6. `JBProjects.approve(revnet.basic_deployer, 1)` -- grants `REVDeployer` ERC-721 approval for project #1
 7. `revnet.basic_deployer.deployFor(1, revnetConfiguration, terminalConfigurations, suckerDeploymentConfiguration)` triggers internally:
    - `JBDirectory.controllerOf[1]` -- set to `JBController`
-   - `JBDirectory.terminalsOf[1]` -- set to `[JBMultiTerminal, JBRouterTerminalRegistry]`
+   - `JBDirectory.terminalsOf(1)` -- set to `[JBMultiTerminal, JBRouterTerminalRegistry]`
    - `JBMultiTerminal.accountingContextForTokenOf(1, NATIVE_TOKEN)` -- registered with 18 decimals
    - `JBRulesets` -- ruleset queued with encoded stage parameters (weight, duration, metadata)
-   - `JBSplits.splitsOf[1][rulesetId][groupId]` -- 100% split to `operator`
+   - `JBSplits.splitsOf(1, rulesetId, groupId)` -- 100% split to `operator`
    - `JBTokens` -- NANA ERC-20 deployed via CREATE2 with `ERC20_SALT`
    - `REVDeployer.amountToAutoIssue[1][stageId][operator]` -- stored for each chain's auto-issuance entry
    - `JBSuckerRegistry` -- suckers deployed and registered (3 on mainnet, 1 on L2s)
@@ -70,6 +70,7 @@ No events are emitted directly by `DeployScript`. The downstream contracts calle
 - `RulesetQueued(uint256 indexed rulesetId, uint256 indexed projectId, uint256 duration, uint256 weight, uint256 weightCutPercent, IJBRulesetApprovalHook approvalHook, uint256 metadata, uint256 mustStartAtOrAfter, address caller)` -- from `JBRulesets` for each queued ruleset
 - `LaunchRulesets(uint256 rulesetId, uint256 projectId, string memo, address caller)` -- from `JBController` when rulesets are launched for the existing project
 - `DeployERC20(uint256 indexed projectId, address indexed deployer, bytes32 salt, bytes32 saltHash, address caller)` -- from `JBController` when the NANA token is deployed
+- `DeployERC20(uint256 indexed projectId, IJBToken indexed token, string name, string symbol, bytes32 salt, address caller)` -- from `JBTokens` when the ERC-20 clone is created and stored
 - `StoreAutoIssuanceAmount(uint256 indexed revnetId, uint256 indexed stageId, address indexed beneficiary, uint256 count, address caller)` -- from `REVDeployer` for each auto-issuance entry (4 per deployment)
 - `DeployRevnet(uint256 indexed revnetId, REVConfig configuration, JBTerminalConfig[] terminalConfigurations, REVSuckerDeploymentConfig suckerDeploymentConfiguration, JBRulesetConfig[] rulesetConfigurations, bytes32 encodedConfigurationHash, address caller)` -- from `REVDeployer` at the end of `deployFor()`
 - `DeploySuckers(uint256 indexed revnetId, bytes32 encodedConfigurationHash, REVSuckerDeploymentConfig suckerDeploymentConfiguration, address caller)` -- from `REVDeployer` when cross-chain suckers are deployed
