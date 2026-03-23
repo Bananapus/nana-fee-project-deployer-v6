@@ -17,7 +17,7 @@
 - **Single operator.** All splits direct 100% of payouts to one operator address (the multisig).
 - **splitPercent sensitivity.** The fee project uses `splitPercent: 6200` (62% of tokens go to reserved splits). If this value is wrong by even 100 basis points, the fee revenue distribution is permanently affected across the entire protocol. At $10M annual fee revenue, a 1% error redistributes ~$100k/year to wrong recipients. The split is set in `_makeRulesetConfigurations` and verified by the revnet deployer's stage validation — but the validation only checks format, not intent.
 - **cashOutTaxRate sensitivity.** The fee project uses `cashOutTaxRate: 1000` (10%). This determines how much surplus is retained when token holders cash out. At 10%, cashing out 1M NANA tokens with 10M ETH surplus returns ~900k ETH equivalent. If the rate were accidentally set to 100 (1%), retention drops to ~10k ETH — a 90x difference in protocol surplus retention per cash-out.
-- **Cross-reference: deploy-all-v6.** The fee project is ALSO configured in `deploy-all-v6` Phase 08b. Both deployment scripts must produce identical configurations. See [deploy-all-v6 RISKS.md](../deploy-all-v6/RISKS.md) section 4 for the full parameter risk analysis. Divergence between the two scripts means the fee project behaves differently depending on which script was used.
+- **Cross-reference: deploy-all-v6.** The fee project is ALSO configured in `deploy-all-v6`. The two scripts share the same economic parameters (splitPercent, cashOutTaxRate, issuanceCutFrequency, auto-issuance amounts) but intentionally differ in operator address: this script uses the Sphinx safe (`safeAddress()`), while `deploy-all-v6` uses a hardcoded multisig address. Only the economic parameters need to match between scripts. See [deploy-all-v6 RISKS.md](../deploy-all-v6/RISKS.md) section 4 for the full parameter risk analysis.
 
 ## 3. Project #1 Significance
 
@@ -39,6 +39,6 @@ Once deployed, the fee project's stage parameters are immutable (revnet design).
 - Sucker pairs connect the correct chains.
 - Auto-issuance amounts match expected per-chain distribution.
 - Operator address is the Sphinx safe, not an individual.
-- Fee project configuration matches `deploy-all-v6` Phase 08b parameters exactly (splitPercent, cashOutTaxRate, issuanceCutFrequency, auto-issuance amounts).
+- Fee project economic parameters match `deploy-all-v6` (splitPercent, cashOutTaxRate, issuanceCutFrequency, auto-issuance amounts). Operator addresses intentionally differ between scripts.
 - The fee project's primary terminal accepts NATIVE_TOKEN on every deployed chain.
 - After deployment, the fee project NFT is owned by REVDeployer (not the Sphinx Safe or any EOA).
