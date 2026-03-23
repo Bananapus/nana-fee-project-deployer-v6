@@ -23,7 +23,7 @@ The script deploys project #1 (the NANA fee project) as a revnet via `REVDeploye
 - **Initial issuance:** 10,000 tokens per ETH
 - **Multi-chain:** Ethereum, Optimism, Base, Arbitrum
 - **Auto-issuance:** Pre-minted tokens distributed across 4 chains to operator multisig
-- **Terminal config:** JBMultiTerminal (native token) + JBRouterTerminal
+- **Terminal config:** JBMultiTerminal (native token) + JBRouterTerminalRegistry
 - **Cross-chain:** Sucker deployments for OP, Base, and Arbitrum bridges
 
 ## Fee Collection Context
