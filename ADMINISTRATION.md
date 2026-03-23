@@ -81,9 +81,9 @@ The split operator (Sphinx safe multisig) can perform the following ongoing oper
 4. **Set project URI** (`SET_PROJECT_URI`) -- Update the project's metadata URI.
 5. **Add price feed** (`ADD_PRICE_FEED`) -- Add price feeds for currency conversions.
 6. **Sucker safety** (`SUCKER_SAFETY`) -- Manage sucker safety settings (emergency hatch, deprecation).
-7. **Set buyback hook** (`SET_BUYBACK_HOOK`) -- Configure or lock the buyback hook.
-8. **Set router terminal** (`SET_ROUTER_TERMINAL`) -- Configure or lock the router terminal.
-9. **Set token metadata** (`SET_TOKEN_METADATA`) -- Update the project token's metadata.
+7. **Set buyback hook** (`SET_BUYBACK_HOOK`) -- Configure or lock the buyback hook via `JBBuybackHookRegistry`.
+8. **Set router terminal** (`SET_ROUTER_TERMINAL`) -- Configure or lock the router terminal via `JBRouterTerminalRegistry`.
+9. **Set token metadata** (`SET_TOKEN_METADATA`) -- Update the revnet token's name and symbol.
 10. **Deploy new suckers** -- Deploy additional cross-chain suckers (enabled by `extraMetadata` bit 2).
 11. **Transfer split operator role** -- Hand off the split operator role to a new address via `setSplitOperatorOf()`.
 
