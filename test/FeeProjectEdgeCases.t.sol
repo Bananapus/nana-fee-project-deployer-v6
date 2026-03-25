@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.26;
+pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
@@ -82,12 +82,14 @@ contract IdentityPriceFeed is IJBPriceFeed {
 /// Validates recursive fee behavior, multi-source fee aggregation,
 /// issuance decay, and terminal failure handling.
 contract FeeProjectEdgeCases is Test, DeployPermit2 {
-    // ───────────────────────── Mainnet constants ─────────────────────────
+    // ───────────────────────── Mainnet constants
+    // ─────────────────────────
 
     /// @dev Uniswap V4 PoolManager on Ethereum mainnet.
     address constant POOL_MANAGER_ADDR = 0x000000000004444c5dc75cB358380D2e3dE08A90;
 
-    // ───────────────────────── Deploy-script constants ─────────────────────────
+    // ───────────────────────── Deploy-script constants
+    // ─────────────────────────
 
     uint256 constant FEE_PROJECT_ID = 1;
     string constant NAME = "Bananapus (Juicebox V6)";
@@ -113,7 +115,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
     uint256 constant FEE = 25;
     uint256 constant MAX_FEE = 1000;
 
-    // ───────────────────────── Actors ─────────────────────────
+    // ───────────────────────── Actors
+    // ─────────────────────────
 
     // forge-lint: disable-next-line(mixed-case-variable)
     address MULTISIG = makeAddr("multisig");
@@ -129,7 +132,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
     address AUTO_ISSUANCE_BENEFICIARY = makeAddr("autoIssuanceBeneficiary");
     address constant TRUSTED_FORWARDER = address(0);
 
-    // ───────────────────────── Infrastructure ─────────────────────────
+    // ───────────────────────── Infrastructure
+    // ─────────────────────────
 
     // JB Core
     JBPermissions jbPermissions;
@@ -156,7 +160,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
     IJBBuybackHookRegistry buybackRegistry;
     REVLoans loansContract;
 
-    // ───────────────────────── Setup ─────────────────────────
+    // ───────────────────────── Setup
+    // ─────────────────────────
 
     function setUp() public {
         // Fork mainnet at a stable block (post-V4 deployment).
@@ -295,7 +300,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         vm.deal(PAYER3, 100 ether);
     }
 
-    // ───────────────────────── Config helpers ─────────────────────────
+    // ───────────────────────── Config helpers
+    // ─────────────────────────
 
     /// @notice Build the fee project REVConfig matching the deploy script.
     function _buildFeeProjectConfig()
@@ -439,7 +445,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         });
     }
 
-    // ───────────────────────── Test 1: Recursive fee on fee project cashout ─────────────────────────
+    // ───────────────────────── Test 1: Recursive fee on fee project
+    // cashout ─────────────────────────
 
     /// @notice Cash out tokens from the fee project (project #1). The 2.5% fee goes BACK to project #1.
     ///         Verifies no infinite loop and that the fee project balance increases relative to what
@@ -492,9 +499,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         // the gross reclaim amount. This proves the recursive fee works without infinite loop.
         uint256 balanceDecrease = feeProjectBalanceBefore - feeProjectBalanceAfter;
         assertEq(
-            balanceDecrease,
-            reclaimAmount,
-            "Balance decrease should equal only the net ETH sent to the beneficiary"
+            balanceDecrease, reclaimAmount, "Balance decrease should equal only the net ETH sent to the beneficiary"
         );
 
         // The payer receives additional NANA tokens from the recursive fee payment back to
@@ -507,7 +512,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         );
     }
 
-    // ───────────────────────── Test 2: Multiple payment sources ─────────────────────────
+    // ───────────────────────── Test 2: Multiple payment sources
+    // ─────────────────────────
 
     /// @notice Deploy fee project + 3 external revnets. Have each generate fees via cashouts.
     ///         Verify fee project balance = sum of all fees and NANA issuance works for each.
@@ -609,7 +615,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         assertTrue(totalNanaSupply > 0, "NANA token supply should be non-zero after fee payments");
     }
 
-    // ───────────────────────── Test 3: Issuance cut after one year ─────────────────────────
+    // ───────────────────────── Test 3: Issuance cut after one year
+    // ─────────────────────────
 
     /// @notice Pay before and after the 360-day issuance cut. Verify token issuance decays by ~38%.
     function testFork_feeProjectIssuanceCutAfterOneYear() public {
@@ -665,7 +672,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         assertApproxEqAbs(tokensAfter, expectedRatio, 1, "Second payment should yield ~62% of first payment's tokens");
     }
 
-    // ───────────────────────── Test 4: Fee terminal failure ─────────────────────────
+    // ───────────────────────── Test 4: Fee terminal failure
+    // ─────────────────────────
 
     /// @notice When the terminal-level fee processing reverts (executeProcessFee), the fee amount
     ///         is returned to the originating project's balance. The FeeReverted event is emitted.
