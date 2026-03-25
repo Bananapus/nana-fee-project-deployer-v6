@@ -15,7 +15,7 @@ This document describes all changes between `nana-fee-project-deployer` (v5) and
 
 ### Solidity version bump
 - **v5:** `pragma solidity 0.8.23`
-- **v6:** `pragma solidity 0.8.26`
+- **v6:** `pragma solidity 0.8.28`
 
 ### EVM target change
 - **v5:** `vm_version = 'paris'` (pre-Cancun, required for L2 compatibility at the time)
@@ -139,7 +139,7 @@ All economic parameters remain identical:
 
 | Aspect | v5 | v6 |
 |---|---|---|
-| Solidity version | `0.8.23` | `0.8.26` |
+| Solidity version | `0.8.23` | `0.8.28` |
 | EVM target | `paris` | `cancun` |
 | Optimizer runs | 100,000,000 | 200 |
 | Deploy script file | `script/Deploy.s.sol` | `script/Deploy.s.sol` |

@@ -227,7 +227,7 @@ No prior formal audit has been conducted on this deployment script. The script i
 
 ## Compiler and Version Info
 
-- **Solidity**: 0.8.26
+- **Solidity**: 0.8.28
 - **EVM target**: Cancun
 - **Optimizer**: via-IR, 200 runs
 - **Framework**: Foundry + Sphinx
