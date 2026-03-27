@@ -7,7 +7,17 @@ This document describes all changes between `nana-fee-project-deployer` (v5) and
 - **Simplified deploy script**: Reduced from 6 deployment libraries to 4 — buyback hook, 721 hook, and loan configuration all removed from the deploy flow.
 - **Swap terminal → Router terminal**: `SwapTerminalDeploymentLib` replaced by `RouterTerminalDeploymentLib`, reflecting the swap terminal's replacement by the more general router terminal.
 - **Cross-VM support**: `JBTokenMapping.remoteToken` changed from `address` to `bytes32` for Solana/SVM compatibility.
-- **Test suite added**: First test coverage for the fee project deployer (~900 lines covering revnet config, chain-specific suckers, and deployment flow).
+- **Sucker token mapping simplified**: The old per-token `minBridgeAmount` field is gone. V6 only specifies `localToken`, `remoteToken`, and `minGas`; anti-spam now lives in the shared sucker registry's `toRemoteFee`.
+- **Test suite added**: V6 now has dedicated deploy-script and edge-case coverage around revnet config, chain-specific sucker selection, and deployment flow.
+
+## ABI Status
+
+This repo is mostly a script/deployment consumer of other repos' ABIs rather than a primary ABI target itself.
+
+ABI-relevant takeaways:
+- the important ABI changes here are inherited from `revnet-core-v6`, `nana-suckers-v6`, and `nana-router-terminal-v6`;
+- the deploy script had to change because those downstream structs and function signatures changed;
+- integrators usually do not need to index or call this repo directly unless they wrap the deploy script or mirror its config builders.
 
 ---
 
@@ -20,6 +30,11 @@ This document describes all changes between `nana-fee-project-deployer` (v5) and
 ### EVM target change
 - **v5:** `vm_version = 'paris'` (pre-Cancun, required for L2 compatibility at the time)
 - **v6:** `evm_version = 'cancun'` (enables transient storage, blob transactions)
+
+### `JBTokenMapping` shape changed for suckers
+- **v5:** `JBTokenMapping` carried `localToken`, `remoteToken`, `minGas`, and `minBridgeAmount`.
+- **v6:** `JBTokenMapping` carries `localToken`, `remoteToken`, and `minGas` only.
+- `minBridgeAmount` was removed upstream in `nana-suckers-v6`; callers configuring mappings must stop passing it.
 
 ### Buyback hook removed from deploy
 - **v5:** Imported `BuybackDeploymentLib`, `REVBuybackHookConfig`, `REVBuybackPoolConfig`, and configured a Uniswap V4 TWAP-based buyback hook with a 10,000 fee tier and 2-day TWAP window.
@@ -69,7 +84,7 @@ This document describes all changes between `nana-fee-project-deployer` (v5) and
 
 ### Test suite added
 - **v5:** No test directory or test files.
-- **v6:** Adds `test/TestFeeProjectDeployer.sol` (~900 lines) with comprehensive coverage:
+- **v6:** Adds dedicated deploy-script and edge-case tests, including `test/TestFeeProjectDeployer.sol`, `test/FeeProjectDeployerFork.t.sol`, and `test/FeeProjectEdgeCases.t.sol`, with coverage for:
   - Mock contracts for `REVDeployer`, `JBProjects`, `JBController`, `JBMultiTerminal`, `JBSuckerDeployer`, and `RouterTerminalRegistry`.
   - Tests for revnet configuration correctness (description, base currency, split operator, stages, auto-issuances, splits, sucker deployment).
   - Chain-specific tests for Ethereum mainnet (3 sucker deployer configs) vs. L2 chains (1 sucker deployer config each for Optimism, Base, Arbitrum).
@@ -115,9 +130,9 @@ This document describes all changes between `nana-fee-project-deployer` (v5) and
 - **v5:** Imported `REVCroptopAllowedPost` and `REVLoanSource` structs that were used only for loans.
 - **v6:** Only imports structs that are actively used. `REVBuybackHookConfig`, `REVBuybackPoolConfig`, `REVCroptopAllowedPost`, and `REVLoanSource` are all removed.
 
-### Optimizer runs reduced
+### Compiler settings updated
 - **v5:** `optimizer_runs = 100000000` (100M, aggressive size-over-gas tradeoff) with `via_ir = true`.
-- **v6:** `optimizer_runs = 200` (Foundry default). `via_ir` not specified (defaults to false).
+- **v6:** `optimizer_runs = 200` and `via_ir = true`.
 
 ### Revnet configuration values unchanged
 All economic parameters remain identical:
@@ -130,8 +145,9 @@ All economic parameters remain identical:
 - `NANA_START_TIME`: 1,740,089,444
 - All four chain auto-issuance amounts unchanged
 - Split: 100% to OPERATOR, no lock
-- Token mappings: native-to-native, 200k minGas, 0.01 ETH minBridgeAmount
+- Token mappings: native-to-native, 200k minGas, `remoteToken` encoded as `bytes32`
 - Sucker deployer logic: 3 deployers on mainnet/sepolia, 1 on L2s
+- Bridge anti-spam pricing is no longer embedded here; it is enforced by the shared sucker registry's `toRemoteFee`
 
 ---
 
@@ -149,6 +165,7 @@ All economic parameters remain identical:
 | Buyback hook | `BuybackDeploymentLib` + `REVBuybackHookConfig` | Removed |
 | 721 hook | `Hook721DeploymentLib` | Removed from deploy |
 | Swap terminal | `SwapTerminalDeploymentLib` | Replaced by `RouterTerminalDeploymentLib` |
+| `JBTokenMapping.minBridgeAmount` | Present | Removed |
 | Loan sources | `REVLoanSource[]` + `revnet.loans` in `REVConfig` | Removed from `REVConfig` |
 | Trusted forwarder | `TRUSTED_FORWARDER` variable | Removed |
 | `remoteToken` type | `address` | `bytes32` |
@@ -160,3 +177,11 @@ All economic parameters remain identical:
 | Sphinx project name | `"nana-core-v5"` | `"nana-core-v6"` |
 | Deployment libs count | 6 | 4 |
 | Dependencies count | 7 + 1 dev | 7 + 1 dev |
+
+---
+
+## 5. Post-Audit Fixes
+
+### NEW-L-4: Updated stale v5 namespace references in deployment helper libraries
+- **Issue**: The npm-published versions of `@bananapus/core-v6` and `@bananapus/suckers-v6` bundled `CoreDeploymentLib.sol` and `SuckerDeploymentLib.sol` that still hardcoded `"nana-core-v5"` and `"nana-suckers-v5"` as Sphinx project names, causing deployment artifact path resolution to target v5 directories instead of v6.
+- **Fix**: Updated npm dependencies to latest versions (`@bananapus/core-v6@0.0.27`, `@bananapus/suckers-v6@0.0.17`) which contain the corrected `"nana-core-v6"` and `"nana-suckers-v6"` namespace strings in their deployment helper libraries.
