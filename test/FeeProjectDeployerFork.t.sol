@@ -274,9 +274,8 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         });
 
         // ── Deploy REVOwner (runtime data hook) ──
-        REVOwner revOwner = new REVOwner(
-            buybackRegistry, jbDirectory, FEE_PROJECT_ID, suckerRegistry, address(loansContract)
-        );
+        REVOwner revOwner =
+            new REVOwner(buybackRegistry, jbDirectory, FEE_PROJECT_ID, suckerRegistry, address(loansContract));
 
         // ── Deploy REVDeployer ──
         revDeployer = new REVDeployer{salt: "REVDeployer_Fork"}(
