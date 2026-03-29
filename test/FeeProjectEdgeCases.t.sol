@@ -57,6 +57,7 @@ import {CTPublisher} from "@croptop/core-v6/src/CTPublisher.sol";
 // Revnet
 import {REVDeployer} from "@rev-net/core-v6/src/REVDeployer.sol";
 import {REVLoans} from "@rev-net/core-v6/src/REVLoans.sol";
+import {REVOwner} from "@rev-net/core-v6/src/REVOwner.sol";
 import {REVAutoIssuance} from "@rev-net/core-v6/src/structs/REVAutoIssuance.sol";
 import {REVConfig} from "@rev-net/core-v6/src/structs/REVConfig.sol";
 import {REVDescription} from "@rev-net/core-v6/src/structs/REVDescription.sol";
@@ -278,6 +279,11 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             trustedForwarder: TRUSTED_FORWARDER
         });
 
+        // ── Deploy REVOwner (runtime data hook) ──
+        REVOwner revOwner = new REVOwner(
+            buybackRegistry, jbDirectory, FEE_PROJECT_ID, suckerRegistry, address(loansContract)
+        );
+
         // ── Deploy REVDeployer ──
         revDeployer = new REVDeployer{salt: "REVDeployer_Edge"}(
             jbController,
@@ -287,7 +293,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             publisher,
             buybackRegistry,
             address(loansContract),
-            TRUSTED_FORWARDER
+            TRUSTED_FORWARDER,
+            address(revOwner)
         );
 
         // Approve the REVDeployer to configure project 1.
