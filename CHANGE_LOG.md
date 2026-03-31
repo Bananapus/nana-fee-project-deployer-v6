@@ -174,7 +174,7 @@ All economic parameters remain identical:
 | Sucker salt | `"_NANA_SUCKER_SALT__"` | `"_NANA_SUCKER_SALTV6__"` |
 | Project name | `"Bananapus (Juicebox V5)"` | `"Bananapus (Juicebox V6)"` |
 | Sphinx import | `@sphinx-labs/contracts/SphinxPlugin.sol` | `@sphinx-labs/contracts/contracts/foundry/SphinxPlugin.sol` |
-| Sphinx project name | `"nana-core-v5"` | `"nana-core-v6"` |
+| Sphinx project name | `"nana-core-v5"` | `"nana-fee-project-deployer-v6"` |
 | Deployment libs count | 6 | 4 |
 | Dependencies count | 7 + 1 dev | 7 + 1 dev |
 
@@ -185,3 +185,7 @@ All economic parameters remain identical:
 ### NEW-L-4: Updated stale v5 namespace references in deployment helper libraries
 - **Issue**: The npm-published versions of `@bananapus/core-v6` and `@bananapus/suckers-v6` bundled `CoreDeploymentLib.sol` and `SuckerDeploymentLib.sol` that still hardcoded `"nana-core-v5"` and `"nana-suckers-v5"` as Sphinx project names, causing deployment artifact path resolution to target v5 directories instead of v6.
 - **Fix**: Updated npm dependencies to latest versions (`@bananapus/core-v6@0.0.27`, `@bananapus/suckers-v6@0.0.17`) which contain the corrected `"nana-core-v6"` and `"nana-suckers-v6"` namespace strings in their deployment helper libraries.
+
+### Consistent auto-issuance chain IDs across deployment set
+- **Issue**: Each chain's deployment wrote its own `block.chainid` for its own auto-issuance entry, meaning the auto-issuance array differed per chain (e.g., Ethereum wrote chainId `1` for its entry, Base wrote `8453` for its entry, but Ethereum wrote `8453` for the Base entry while Base wrote `8453` too). Since the auto-issuance entries are part of the `REVStageConfig`, any difference in the array causes the ruleset configuration hash to differ across chains, which breaks cross-chain ruleset verification.
+- **Fix**: All chains in a deployment set (mainnet or testnet) now write the same four auto-issuance entries with identical chain IDs. A `bool isTestnet` flag determines which set of chain IDs to use: mainnet IDs (`1`, `8453`, `10`, `42161`) or testnet IDs (`11155111`, `84532`, `11155420`, `421614`). This ensures the ruleset hash matches across all chains in the set.

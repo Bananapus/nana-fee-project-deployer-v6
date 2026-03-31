@@ -126,37 +126,26 @@ contract DeployScript is Script, Sphinx {
             hook: IJBSplitHook(address(0))
         });
 
-        // Use the current chain ID for auto-issuance so testnet deployments (Sepolia) work correctly.
-        // On mainnets, block.chainid matches the hardcoded IDs. On testnets, we use the testnet chain ID
-        // for the current chain and mainnet IDs for the others (cross-chain issuance targets mainnets).
+        // All chains in a set (mainnet or testnet) must write the same auto-issuance entries so the ruleset hash
+        // matches across chains. Use block.chainid only to pick which set of chain IDs to use.
+        bool isTestnet = block.chainid == 11_155_111 || block.chainid == 11_155_420 || block.chainid == 84_532
+            || block.chainid == 421_614;
+
         REVAutoIssuance[] memory issuanceConfs = new REVAutoIssuance[](4);
-        // Use block.chainid for the current chain's auto-issuance entry.
-        if (block.chainid == 1 || block.chainid == 11_155_111) {
-            issuanceConfs[0] = REVAutoIssuance({
-                chainId: uint32(block.chainid), count: NANA_MAINNET_AUTO_ISSUANCE, beneficiary: operator
-            });
-        } else {
-            issuanceConfs[0] = REVAutoIssuance({chainId: 1, count: NANA_MAINNET_AUTO_ISSUANCE, beneficiary: operator});
-        }
-        if (block.chainid == 8453 || block.chainid == 84_532) {
-            issuanceConfs[1] = REVAutoIssuance({
-                chainId: uint32(block.chainid), count: NANA_BASE_AUTO_ISSUANCE, beneficiary: operator
-            });
-        } else {
-            issuanceConfs[1] = REVAutoIssuance({chainId: 8453, count: NANA_BASE_AUTO_ISSUANCE, beneficiary: operator});
-        }
-        if (block.chainid == 10 || block.chainid == 11_155_420) {
-            issuanceConfs[2] =
-                REVAutoIssuance({chainId: uint32(block.chainid), count: NANA_OP_AUTO_ISSUANCE, beneficiary: operator});
-        } else {
-            issuanceConfs[2] = REVAutoIssuance({chainId: 10, count: NANA_OP_AUTO_ISSUANCE, beneficiary: operator});
-        }
-        if (block.chainid == 42_161 || block.chainid == 421_614) {
-            issuanceConfs[3] =
-                REVAutoIssuance({chainId: uint32(block.chainid), count: NANA_ARB_AUTO_ISSUANCE, beneficiary: operator});
-        } else {
-            issuanceConfs[3] = REVAutoIssuance({chainId: 42_161, count: NANA_ARB_AUTO_ISSUANCE, beneficiary: operator});
-        }
+        issuanceConfs[0] = REVAutoIssuance({
+            chainId: isTestnet ? uint32(11_155_111) : uint32(1),
+            count: NANA_MAINNET_AUTO_ISSUANCE,
+            beneficiary: operator
+        });
+        issuanceConfs[1] = REVAutoIssuance({
+            chainId: isTestnet ? uint32(84_532) : uint32(8453), count: NANA_BASE_AUTO_ISSUANCE, beneficiary: operator
+        });
+        issuanceConfs[2] = REVAutoIssuance({
+            chainId: isTestnet ? uint32(11_155_420) : uint32(10), count: NANA_OP_AUTO_ISSUANCE, beneficiary: operator
+        });
+        issuanceConfs[3] = REVAutoIssuance({
+            chainId: isTestnet ? uint32(421_614) : uint32(42_161), count: NANA_ARB_AUTO_ISSUANCE, beneficiary: operator
+        });
         // The project's revnet stage configurations.
         REVStageConfig[] memory stageConfigurations = new REVStageConfig[](1);
         stageConfigurations[0] = REVStageConfig({
