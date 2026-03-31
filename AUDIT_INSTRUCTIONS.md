@@ -6,7 +6,7 @@ You are auditing the deployment script for Juicebox V6's fee project (project #1
 
 **In scope:**
 ```
-script/Deploy.s.sol    # Sphinx deployment script (~204 lines)
+script/Deploy.s.sol    # Sphinx deployment script (~223 lines)
 ```
 
 **Out of scope:** All dependencies (nana-core, revnet-core, nana-suckers, nana-router-terminal, Sphinx plugin), node_modules, test files, forge-std. There is no `src/` directory -- this repo exists solely to deploy project #1.
