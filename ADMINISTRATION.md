@@ -2,6 +2,32 @@
 
 Admin privileges and their scope in nana-fee-project-deployer-v6.
 
+## At A Glance
+
+| Item | Details |
+|------|---------|
+| Scope | Deployment and post-launch control model for Juicebox project `#1`, the fee beneficiary project. |
+| Operators | The deployment script at rollout time, then the revnet-controlled project and its split operator after deployment. |
+| Highest-risk actions | Launching project `#1` with the wrong initial revnet configuration, wrong auto-issuance recipients, or wrong split-operator address. |
+| Recovery posture | Project `#1` is meant to be deployed correctly once. A bad launch generally requires redeployment or broader protocol migration rather than in-place admin repair. |
+
+## Routine Operations
+
+- Verify the deployment script inputs for token metadata, stage config, auto-issuances, sucker setup, and router configuration before running it.
+- After deployment, treat project `#1` like any other revnet: the split operator only has the revnet-scoped mutable surfaces documented here.
+- Keep fee-project operational changes limited to the permitted revnet integrations rather than attempting to treat project `#1` like a traditionally owned treasury project.
+
+## One-Way Or High-Risk Actions
+
+- The fee beneficiary role of project `#1` is structurally important to the ecosystem and cannot be swapped casually.
+- Revnet economics, initial stage config, and deployment-time token distribution choices are not editable after launch.
+- Split-operator transfer changes the only human-controlled role for the fee project.
+
+## Recovery Notes
+
+- If deployment config is wrong before launch, stop and fix the script. After launch, the recovery path is typically a replacement deployment or ecosystem migration plan rather than a local patch.
+- If the split operator is wrong but still active, transfer it through the documented revnet operator path before relying on project `#1` for more integrations.
+
 ## Protocol Context
 
 This repo deploys **project #1** -- the Juicebox V6 fee project. It is a revnet (autonomous project) governed by the rules in [revnet-core-v6](https://github.com/Bananapus/revnet-core-v6). All admin constraints, split operator permissions, and autonomous design guarantees documented in revnet-core-v6's ADMINISTRATION.md apply here.
@@ -80,7 +106,7 @@ The split operator (Sphinx safe multisig) can perform the following ongoing oper
 3. **Set buyback TWAP** (`SET_BUYBACK_TWAP`) -- Adjust the TWAP window for buyback price calculations.
 4. **Set project URI** (`SET_PROJECT_URI`) -- Update the project's metadata URI.
 5. **Add price feed** (`ADD_PRICE_FEED`) -- Add price feeds for currency conversions.
-6. **Sucker safety** (`SUCKER_SAFETY`) -- Manage sucker safety settings (emergency hatch, deprecation).
+6. **Sucker safety** (`SUCKER_SAFETY`) -- Manage sucker emergency-hatch safety settings.
 7. **Set buyback hook** (`SET_BUYBACK_HOOK`) -- Configure or lock the buyback hook via `JBBuybackHookRegistry`.
 8. **Set router terminal** (`SET_ROUTER_TERMINAL`) -- Configure or lock the router terminal via `JBRouterTerminalRegistry`.
 9. **Set token metadata** (`SET_TOKEN_METADATA`) -- Update the revnet token's name and symbol.
