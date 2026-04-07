@@ -56,6 +56,7 @@ import {CTPublisher} from "@croptop/core-v6/src/CTPublisher.sol";
 
 // Revnet
 import {REVDeployer} from "@rev-net/core-v6/src/REVDeployer.sol";
+import {IREVDeployer} from "@rev-net/core-v6/src/interfaces/IREVDeployer.sol";
 import {REVLoans} from "@rev-net/core-v6/src/REVLoans.sol";
 import {REVOwner} from "@rev-net/core-v6/src/REVOwner.sol";
 import {REVAutoIssuance} from "@rev-net/core-v6/src/structs/REVAutoIssuance.sol";
@@ -295,6 +296,9 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             TRUSTED_FORWARDER,
             address(revOwner)
         );
+
+        // Wire the deployer into the owner.
+        revOwner.setDeployer(IREVDeployer(address(revDeployer)));
 
         // Approve the REVDeployer to configure project 1.
         vm.prank(MULTISIG);
