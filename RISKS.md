@@ -1,4 +1,21 @@
-# RISKS.md -- nana-fee-project-deployer-v6
+# Fee Project Deployer Risk Register
+
+This file focuses on the risks around project `#1`, the protocol fee sink. Because every other project depends on it, configuration and deployment mistakes here have outsized ecosystem impact.
+
+## How to use this file
+
+- Read `Priority risks` first; they highlight why project `#1` deserves stricter operational treatment than a normal deployment.
+- Use the detailed sections for configuration, significance, and post-deployment reasoning.
+- Treat `Invariants to Verify` as ecosystem-level checks, not local niceties.
+
+## Priority risks
+
+| Priority | Risk | Why it matters | Primary controls |
+|----------|------|----------------|------------------|
+| P0 | Misconfigured project `#1` rollout | Every fee path in the ecosystem points here; a bad deployment can break fee collection or distort token economics globally. | Deterministic deploy review, chain parity checks, and post-deploy verification of terminals, hooks, and project ID. |
+| P1 | Post-deploy liveness degradation | If project `#1` cannot accept or process fees cleanly, downstream repos often continue operating while fee economics silently degrade. | Monitoring, smoke tests, and explicit routing or fallback review after deployment. |
+| P1 | Governance or ownership irreversibility mistakes | The fee project's ownership and revnet wiring are intentionally opinionated; mistakes are hard to unwind. | Careful one-shot configuration review and dedicated operator runbooks. |
+
 
 ## 1. Trust Assumptions
 
@@ -17,7 +34,7 @@
 - **Single operator.** All splits direct 100% of payouts to one operator address (the multisig).
 - **splitPercent sensitivity.** The fee project uses `splitPercent: 6200` (62% of tokens go to reserved splits). If this value is wrong by even 100 basis points, the fee revenue distribution is permanently affected across the entire protocol. At $10M annual fee revenue, a 1% error redistributes ~$100k/year to wrong recipients. The split is set in `_makeRulesetConfigurations` and verified by the revnet deployer's stage validation — but the validation only checks format, not intent.
 - **cashOutTaxRate sensitivity.** The fee project uses `cashOutTaxRate: 1000` (10%). This determines how much surplus is retained when token holders cash out. At 10%, cashing out 1M NANA tokens with 10M ETH surplus returns ~900k ETH equivalent. If the rate were accidentally set to 100 (1%), retention drops to ~10k ETH — a 90x difference in protocol surplus retention per cash-out.
-- **Cross-reference: deploy-all-v6.** The fee project is ALSO configured in `deploy-all-v6`. The two scripts share the same economic parameters (splitPercent, cashOutTaxRate, issuanceCutFrequency, auto-issuance amounts) but intentionally differ in operator address: this script uses the Sphinx safe (`safeAddress()`), while `deploy-all-v6` uses a hardcoded multisig address. Only the economic parameters need to match between scripts. See [deploy-all-v6 RISKS.md](../deploy-all-v6/RISKS.md) section 4 for the full parameter risk analysis.
+- **Cross-reference: deploy-all-v6.** The fee project is ALSO configured in `deploy-all-v6`. The two scripts share the same economic parameters (splitPercent, cashOutTaxRate, issuanceCutFrequency, auto-issuance amounts) but intentionally differ in operator address: this script uses the Sphinx safe (`safeAddress()`), while `deploy-all-v6` uses a hardcoded multisig address. Only the economic parameters need to match between scripts. See [deploy-all-v6 RISKS.md](../deploy-all-v6/RISKS.md) section 5 for the full parameter risk analysis.
 
 ## 3. Project #1 Significance
 
