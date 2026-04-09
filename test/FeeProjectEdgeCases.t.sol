@@ -229,7 +229,12 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         // ── Register identity price feed (NATIVE_TOKEN currency <> ETH base currency) ──
         IdentityPriceFeed identityFeed = new IdentityPriceFeed();
         vm.prank(MULTISIG);
-        jbPrices.addPriceFeedFor(0, NATIVE_CURRENCY, ETH_CURRENCY, IJBPriceFeed(address(identityFeed)));
+        jbPrices.addPriceFeedFor({
+            projectId: 0,
+            pricingCurrency: NATIVE_CURRENCY,
+            unitCurrency: ETH_CURRENCY,
+            feed: IJBPriceFeed(address(identityFeed))
+        });
 
         // ── Create project 1 (fee project) ──
         vm.prank(MULTISIG);
