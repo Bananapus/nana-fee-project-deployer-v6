@@ -223,7 +223,12 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         // Both represent ETH, so the feed returns 1:1.
         MockPriceFeed identityFeed = new MockPriceFeed();
         vm.prank(MULTISIG);
-        jbPrices.addPriceFeedFor(0, NATIVE_CURRENCY, ETH_CURRENCY, IJBPriceFeed(address(identityFeed)));
+        jbPrices.addPriceFeedFor({
+            projectId: 0,
+            pricingCurrency: NATIVE_CURRENCY,
+            unitCurrency: ETH_CURRENCY,
+            feed: IJBPriceFeed(address(identityFeed))
+        });
 
         // ── Create project 1 (fee project) ──
         vm.prank(MULTISIG);
@@ -481,14 +486,16 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         uint256 stageId = currentRuleset.id;
 
         // Verify auto-issuance is available for the beneficiary.
-        uint256 autoIssuanceAmount = revDeployer.amountToAutoIssue(FEE_PROJECT_ID, stageId, AUTO_ISSUANCE_BENEFICIARY);
+        uint256 autoIssuanceAmount = revDeployer.amountToAutoIssue({
+            revnetId: FEE_PROJECT_ID, stageId: stageId, beneficiary: AUTO_ISSUANCE_BENEFICIARY
+        });
         assertEq(autoIssuanceAmount, MAINNET_AUTO_ISSUANCE, "Auto-issuance amount should match configured value");
 
         // Record the beneficiary's balance before auto-issuance.
         uint256 balanceBefore = jbTokens.totalBalanceOf(AUTO_ISSUANCE_BENEFICIARY, FEE_PROJECT_ID);
 
         // Call autoIssueFor.
-        revDeployer.autoIssueFor(FEE_PROJECT_ID, stageId, AUTO_ISSUANCE_BENEFICIARY);
+        revDeployer.autoIssueFor({revnetId: FEE_PROJECT_ID, stageId: stageId, beneficiary: AUTO_ISSUANCE_BENEFICIARY});
 
         // Verify the beneficiary received the tokens.
         uint256 balanceAfter = jbTokens.totalBalanceOf(AUTO_ISSUANCE_BENEFICIARY, FEE_PROJECT_ID);
@@ -497,7 +504,9 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         );
 
         // Verify the auto-issuance slot is now zero (consumed).
-        uint256 remaining = revDeployer.amountToAutoIssue(FEE_PROJECT_ID, stageId, AUTO_ISSUANCE_BENEFICIARY);
+        uint256 remaining = revDeployer.amountToAutoIssue({
+            revnetId: FEE_PROJECT_ID, stageId: stageId, beneficiary: AUTO_ISSUANCE_BENEFICIARY
+        });
         assertEq(remaining, 0, "Auto-issuance should be fully consumed");
     }
 
