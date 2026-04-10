@@ -49,7 +49,16 @@ Once deployed, the fee project's stage parameters are immutable (revnet design).
 - **Issuance decay compounding.** With 38% cut every 360 days, the fee project's issuance weight drops to ~1% of initial after ~10 years. Late contributors receive orders of magnitude fewer tokens per ETH. This is by design (early contributor premium) but means the fee project's token distribution is heavily front-loaded.
 - **Split operator responsibility.** The operator (Sphinx Safe multisig) controls payout distribution. If the multisig loses quorum (key loss, signer unavailability), payouts cannot be triggered. Reserved tokens continue accumulating but cannot be distributed until the operator acts.
 
-## 5. Invariants to Verify
+## 5. Accepted Behaviors
+
+### 5.1 Historical stage anchoring is intentional
+
+`NANA_START_TIME` is hardcoded and may already be in the past at deployment time, which means the first stage can
+start retroactively and issuance decay can already be underway at launch. This is accepted because the fee project is
+intended to share one canonical issuance schedule across chains rather than grant each deployment a fresh local epoch.
+The tradeoff is that late deployments intentionally inherit the already-decaying schedule instead of restarting it.
+
+## 6. Invariants to Verify
 
 - Project #1 is owned by the REVDeployer (data hook pattern).
 - All stage parameters match the intended configuration.
