@@ -2,38 +2,25 @@
 
 ## Use This File For
 
-- Use this file when the task is about deploying or rehearing protocol fee project `#1`, checking its project shape, or validating assumptions that the broader ecosystem makes about the fee beneficiary.
-- Start here, then decide whether the issue is fee-project deployment shape, ordering, or a downstream repo incorrectly assuming what project `#1` looks like.
+- Use this file when the task involves deploying or reviewing protocol fee project `#1`.
+- Start here, then decide whether the issue is in deployment packaging, cross-chain parity, or the runtime repo this deployer wires together.
 
 ## Read This Next
 
 | If you need... | Open this next |
 |---|---|
-| Repo overview and deployment intent | [`README.md`](./README.md), [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
-| Canonical deployment behavior | [`script/Deploy.s.sol`](./script/Deploy.s.sol) |
-| Runtime and operational assumptions | [`references/runtime.md`](./references/runtime.md), [`references/operations.md`](./references/operations.md) |
-| Fork or edge validation | [`test/FeeProjectDeployerFork.t.sol`](./test/FeeProjectDeployerFork.t.sol), [`test/FeeProjectEdgeCases.t.sol`](./test/FeeProjectEdgeCases.t.sol), [`test/TestFeeProjectDeployer.sol`](./test/TestFeeProjectDeployer.sol) |
-
-## Repo Map
-
-| Area | Where to look |
-|---|---|
-| Scripts | [`script/`](./script/) |
-| Tests | [`test/`](./test/) |
+| Repo overview and deployment shape | [`README.md`](./README.md), [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
+| Main deployment script | [`script/Deploy.s.sol`](./script/Deploy.s.sol) |
+| Main tests | [`test/TestFeeProjectDeployer.sol`](./test/TestFeeProjectDeployer.sol), [`test/FeeProjectEdgeCases.t.sol`](./test/FeeProjectEdgeCases.t.sol), [`test/FeeProjectDeployerFork.t.sol`](./test/FeeProjectDeployerFork.t.sol) |
+| Underlying revnet deployer | [`../revnet-core-v6/src/REVDeployer.sol`](../revnet-core-v6/src/REVDeployer.sol) |
 
 ## Purpose
 
-Deployment packaging for Juicebox fee project `#1`, the ecosystem-wide fee beneficiary. This repo matters because many fee-bearing flows assume that specific project exists and is configured correctly.
-
-## Reference Files
-
-- Open [`references/runtime.md`](./references/runtime.md) when you need the core assumptions this repo bakes into fee project `#1`.
-- Open [`references/operations.md`](./references/operations.md) when you need deployment breadcrumbs, verification pointers, or the common stale assumptions around fee-project shape and ordering.
+Single-purpose deployment package for the canonical protocol fee project.
 
 ## Working Rules
 
-- Start in [`script/Deploy.s.sol`](./script/Deploy.s.sol). This repo is packaging, not a general-purpose protocol module.
-- Treat project `#1` assumptions as ecosystem-critical. Small configuration mistakes here ripple widely.
-- Fork and edge-case tests matter more than unit-style confidence here because the repo exists to package composed behavior.
-- Terminal configuration for the fee project is itself part of the risk surface. Downstream fee paths may fail even when the project deploys cleanly.
-- When debugging behavior, confirm whether the source is this deployment shape or a downstream revnet/router/sucker repo it composes.
+- Start in [`script/Deploy.s.sol`](./script/Deploy.s.sol).
+- Treat deployment parameters as economic policy, not boilerplate.
+- Compare this repo's economic settings with `deploy-all-v6` where they are expected to match.
+- Remember that directory terminal locking is a separate post-deploy step.
