@@ -86,8 +86,8 @@ contract DeployScript is Script, Sphinx {
             )
         );
 
-        // Set the operator address to be the multisig.
-        operator = safeAddress();
+        // Set the operator address to the canonical NANA operator.
+        operator = 0x80a8F7a4bD75b539CE26937016Df607fdC9ABeb5;
 
         // Perform the deployment transactions.
         deploy();
@@ -207,6 +207,9 @@ contract DeployScript is Script, Sphinx {
         // Specify all sucker deployments.
         REVSuckerDeploymentConfig memory suckerDeploymentConfiguration =
             REVSuckerDeploymentConfig({deployerConfigurations: suckerDeployerConfigurations, salt: SUCKER_SALT});
+
+        // Skip deployment if the fee project already has a controller configured.
+        if (address(core.controller.DIRECTORY().controllerOf(feeProjectId)) != address(0)) return;
 
         // Approve the basic deployer to configure the project.
         core.projects.approve({to: address(revnet.basic_deployer), tokenId: feeProjectId});
