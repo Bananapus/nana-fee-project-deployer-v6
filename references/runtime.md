@@ -2,7 +2,7 @@
 
 ## Core Role
 
-- [`script/Deploy.s.sol`](../script/Deploy.s.sol) packages the fee project's Revnet, routing, and sucker assumptions into the canonical deployment for project `#1`.
+- [`script/Deploy.s.sol`](../script/Deploy.s.sol) is the repo. It packages the fee project's revnet, routing, and sucker assumptions into the canonical deployment for project `#1`.
 
 ## High-Risk Areas
 
@@ -14,3 +14,4 @@
 
 - [`test/FeeProjectDeployerFork.t.sol`](../test/FeeProjectDeployerFork.t.sol) for live assumptions.
 - [`test/FeeProjectEdgeCases.t.sol`](../test/FeeProjectEdgeCases.t.sol) and [`test/TestFeeProjectDeployer.sol`](../test/TestFeeProjectDeployer.sol) for deployment-shape edge cases.
+- [`test/audit/LateStartTime.t.sol`](../test/audit/LateStartTime.t.sol) for the timing edge that can silently corrupt the fee project's intended lifecycle.

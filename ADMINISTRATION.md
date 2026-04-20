@@ -1,132 +1,76 @@
 # Administration
 
-Admin privileges and their scope in nana-fee-project-deployer-v6.
-
 ## At A Glance
 
 | Item | Details |
-|------|---------|
-| Scope | Deployment and post-launch control model for Juicebox project `#1`, the fee beneficiary project. |
-| Operators | The deployment script at rollout time, then the revnet-controlled project and its split operator after deployment. |
-| Highest-risk actions | Launching project `#1` with the wrong initial revnet configuration, wrong auto-issuance recipients, or wrong split-operator address. |
-| Recovery posture | Project `#1` is meant to be deployed correctly once. A bad launch generally requires redeployment or broader protocol migration rather than in-place admin repair. |
+| --- | --- |
+| Scope | Deployment of the canonical fee-beneficiary project and its initial downstream wiring |
+| Control posture | Deployment-only control |
+| Highest-risk actions | Resolving the wrong protocol addresses, choosing the wrong terminal or router shape, and deploying the wrong fee-project config |
+| Recovery posture | Usually requires replacement deployment and ecosystem migration |
 
-## Routine Operations
+## Purpose
 
-- Verify the deployment script inputs for token metadata, stage config, auto-issuances, sucker setup, and router configuration before running it.
-- After deployment, treat project `#1` like any other revnet: the split operator only has the revnet-scoped mutable surfaces documented here.
-- Keep fee-project operational changes limited to the permitted revnet integrations rather than attempting to treat project `#1` like a traditionally owned treasury project.
+`nana-fee-project-deployer-v6` has no runtime admin surface of its own. Its significance is deployment-time: it chooses the configuration of the canonical fee-beneficiary project, and many downstream fee paths assume that project exists and is configured correctly.
 
-## One-Way Or High-Risk Actions
+## Control Model
 
-- The fee beneficiary role of project `#1` is structurally important to the ecosystem and cannot be swapped casually.
-- Revnet economics, initial stage config, and deployment-time token distribution choices are not editable after launch.
-- Split-operator transfer changes the only human-controlled role for the fee project.
-
-## Recovery Notes
-
-- If deployment config is wrong before launch, stop and fix the script. After launch, the recovery path is typically a replacement deployment or ecosystem migration plan rather than a local patch.
-- If the split operator is wrong but still active, transfer it through the documented revnet operator path before relying on project `#1` for more integrations.
-
-## Protocol Context
-
-This repo deploys **project #1** -- the Juicebox V6 fee project. It is a revnet (autonomous project) governed by the rules in [revnet-core-v6](https://github.com/Bananapus/revnet-core-v6). All admin constraints, split operator permissions, and autonomous design guarantees documented in revnet-core-v6's ADMINISTRATION.md apply here.
-
-The fee project receives the 2.5% protocol fee from all `JBMultiTerminal` operations (payouts, surplus allowance usage, and cash outs with non-zero tax rates). The fee rate and fee beneficiary (project ID 1) are hardcoded constants in `JBMultiTerminal` and `REVDeployer` respectively -- see [nana-core-v6 ADMINISTRATION.md](https://github.com/Bananapus/nana-core-v6/blob/main/ADMINISTRATION.md) for the full permission model.
+- Deployment-only repo
+- Runtime power lives in the downstream contracts it instantiates
+- Script assumptions about terminal choice, revnet config, and cross-chain setup are the real control surface
+- The launch script selects initial terminals, but terminal routing is not automatically locked after deployment
 
 ## Roles
 
-| Role | Who | How Assigned |
-|------|-----|-------------|
-| Deployer | Anyone who runs the Sphinx deployment script | Executes `Deploy.s.sol` via Sphinx proposal process |
-| Project #1 Owner (on-chain) | `REVDeployer` contract | Project NFT transferred to `REVDeployer` during `deployFor()` -- permanent and irreversible |
-| Split Operator | Sphinx safe multisig (`safeAddress()`) | Set as `splitOperator` in `REVConfig` at deploy time |
+| Role | How Assigned | Scope | Notes |
+| --- | --- | --- | --- |
+| Deployment operator | Whoever runs the script | One deployment | Chooses when and where the fee project is instantiated |
+| Post-deploy project operator | Determined by downstream deployer config | Runtime | Not defined locally in this repo |
 
-The Sphinx safe multisig is the `OPERATOR` in the deployment script. It receives split payouts, auto-issuances, and the split operator role for project #1.
+## Privileged Surfaces
 
-## Privileged Functions
+The only meaningful control surface here is `script/Deploy.s.sol`, which:
 
-This repo contains no runtime contracts (`src/` does not exist). All privileged functions below are on `REVDeployer`, which becomes the permanent owner of project #1 after deployment.
+- resolves existing protocol addresses
+- assembles the fee project's immutable configuration
+- chooses terminal configuration and optional sucker setup
+- launches the canonical fee project through downstream deployers
+- leaves the fee project's terminal selection mutable unless downstream operators explicitly lock it later
 
-### DeployScript (script/Deploy.s.sol)
+## Immutable And One-Way
 
-| Function | Required Role | Permission ID | Scope | What It Does |
-|----------|--------------|---------------|-------|-------------|
-| `deploy()` | Sphinx safe signer(s) | N/A (Sphinx `sphinx` modifier) | One-time | Approves `REVDeployer` for project #1 NFT, calls `REVDeployer.deployFor()` with full revnet configuration |
+- The fee project's initial stage config and operator assumptions become economically important immediately.
+- Wrong address resolution is a deployment mistake, not a runtime toggle.
+- Some runtime routing choices, especially terminal selection in the directory, still remain mutable after launch unless explicitly locked.
 
-### REVDeployer (post-deployment, acting as project #1 owner)
+## Operational Notes
 
-| Function | Required Role | Permission ID | Scope | What It Does |
-|----------|--------------|---------------|-------|-------------|
-| `setSplitOperatorOf()` | Current split operator | `SET_SPLIT_GROUPS`, `SET_BUYBACK_POOL`, `SET_BUYBACK_TWAP`, `SET_PROJECT_URI`, `ADD_PRICE_FEED`, `SUCKER_SAFETY`, `SET_BUYBACK_HOOK`, `SET_ROUTER_TERMINAL`, `SET_TOKEN_METADATA` (all 9 checked) | Project #1 | Transfers split operator role to a new address |
-| `deploySuckersFor()` | Split operator | Same 9 permissions (checked via `isSplitOperatorOf`) | Project #1 | Deploys new cross-chain suckers; only works if `extraMetadata` bit 2 is set (it is: value `4`) |
-| `autoIssueFor()` | Anyone | None | Per-stage, per-beneficiary | Mints pre-configured auto-issuance tokens for a beneficiary once a stage starts; one-time per stage per beneficiary |
-| `burnHeldTokensOf()` | Anyone | None | Project #1 | Burns any project tokens held by the `REVDeployer` contract (from reserved token distribution leftovers) |
+- Verify that the fee project's intended terminal and router setup are correct before deployment.
+- Treat post-deploy terminal locking as a separate operational step if silent routing changes are unacceptable.
+- Treat this repo as coupled to `deploy-all-v6` and the downstream deployers it calls.
+- Re-check any downstream constructor or interface change against this script.
 
-## Deployment Configuration
+## Machine Notes
 
-The following parameters are hardcoded in `Deploy.s.sol` and become immutable once deployed:
+- Do not infer intent from partially resolved addresses; this repo depends on explicit config.
+- Treat `script/Deploy.s.sol` as the runtime-equivalent source of truth because there is no local mutable contract admin surface.
+- If the fee project's terminal routing has not been explicitly locked downstream, do not describe it as finalized.
+- If downstream deployer assumptions changed, invalidate the runbook until the script and tests are reviewed together.
 
-| Parameter | Value | Notes |
-|-----------|-------|-------|
-| Project ID | `1` | Hardcoded as `FEE_PROJECT_ID = 1` -- must be the first project deployed |
-| Token name | `Bananapus (Juicebox V6)` | ERC-20 name |
-| Token symbol | `NANA` | ERC-20 ticker |
-| Base currency | ETH (`JBCurrencyIds.ETH`) | Issuance denominated in ETH |
-| Initial issuance | 10,000 NANA per ETH | `uint112(10_000 * 10^18)` |
-| Issuance cut | 38% every 360 days | `issuanceCutPercent: 380_000_000` over `issuanceCutFrequency: 360 days` |
-| Split percent | 62% | Reserved tokens split to operator |
-| Cash-out tax rate | 10% | `cashOutTaxRate: 1000` (out of 10,000) |
-| Extra metadata | `4` (binary `100`) | Bit 2 set: allows deploying new suckers |
-| Start time | `1_740_089_444` (Unix timestamp) | Stage start time |
-| Terminals | `JBMultiTerminal` (native token) + `JBRouterTerminal` | Two terminals configured |
-| Chains | Ethereum, Optimism, Base, Arbitrum | Suckers deployed for cross-chain bridging |
-| Split beneficiary | Sphinx safe multisig | 100% of reserved token splits go to `OPERATOR` |
-| Auto-issuances | ~34,614 NANA (mainnet), ~1,604 NANA (Base), ~6.27 NANA (OP), ~0.105 NANA (Arb) | Pre-minted to `OPERATOR` per chain |
+## Recovery
 
-## Auto-Issuance Derivation
-
-The auto-issuance amounts represent tokens pre-allocated to the Sphinx safe multisig as compensation for deployment costs and early contributions. The amounts differ per chain because they are denominated in the fee project's token ($NANA) at the initial issuance rate of 10,000 NANA per ETH, calibrated to the ETH value of deployment costs on each chain:
-
-| Chain | Auto-Issuance | Approximate ETH Equivalent |
-|-------|--------------|---------------------------|
-| Ethereum | ~34,614 NANA | ~3.46 ETH |
-| Base | ~1,604 NANA | ~0.16 ETH |
-| Optimism | ~6.27 NANA | ~0.000627 ETH |
-| Arbitrum | ~0.105 NANA | ~0.0000105 ETH |
-
-These amounts are one-time claims. Once `autoIssueFor()` is called for a beneficiary on a given stage, the same beneficiary cannot claim again for that stage.
-
-## Post-Deployment Administration
-
-The split operator (Sphinx safe multisig) can perform the following ongoing operations:
-
-1. **Set split groups** (`SET_SPLIT_GROUPS`) -- Change how reserved tokens are distributed among recipients.
-2. **Set buyback pool** (`SET_BUYBACK_POOL`) -- Configure Uniswap pool parameters for the buyback hook.
-3. **Set buyback TWAP** (`SET_BUYBACK_TWAP`) -- Adjust the TWAP window for buyback price calculations.
-4. **Set project URI** (`SET_PROJECT_URI`) -- Update the project's metadata URI.
-5. **Add price feed** (`ADD_PRICE_FEED`) -- Add price feeds for currency conversions.
-6. **Sucker safety** (`SUCKER_SAFETY`) -- Manage sucker emergency-hatch safety settings.
-7. **Set buyback hook** (`SET_BUYBACK_HOOK`) -- Configure or lock the buyback hook via `JBBuybackHookRegistry`.
-8. **Set router terminal** (`SET_ROUTER_TERMINAL`) -- Configure or lock the router terminal via `JBRouterTerminalRegistry`.
-9. **Set token metadata** (`SET_TOKEN_METADATA`) -- Update the revnet token's name and symbol.
-10. **Deploy new suckers** -- Deploy additional cross-chain suckers (enabled by `extraMetadata` bit 2).
-11. **Transfer split operator role** -- Hand off the split operator role to a new address via `setSplitOperatorOf()`.
-
-Anyone can call:
-- `autoIssueFor()` -- Trigger pre-configured auto-issuance mints once a stage has started (one-time per beneficiary per stage).
-- `burnHeldTokensOf()` -- Burn any project tokens stuck in the `REVDeployer` contract.
+- If the wrong fee-project shape is deployed, the normal fix is a new deployment and broader ecosystem migration to the replacement path.
+- There is no local owner or setter to patch the config afterward.
+- Some downstream runtime configuration, such as terminal selection, may still be recoverable through the owning protocol surfaces if they were not locked.
 
 ## Admin Boundaries
 
-What admins CANNOT do:
+- This repo cannot modify the runtime behavior of the deployed fee project after launch.
+- It cannot safely autodiscover intent; it depends on explicit address and config choices.
+- It also does not guarantee that downstream terminal selection is frozen; that guarantee must come from downstream locking.
 
-- **Change stage parameters** -- Issuance rate, issuance cut, cash-out tax rate, split percent, and start time are immutable once deployed (revnet design).
-- **Add new stages** -- The revnet's stage configuration is set at deployment and cannot be extended.
-- **Mint arbitrary tokens** -- Only the `REVDeployer` (as data hook) can authorize minting, and only for suckers, the buyback hook, and the loans contract.
-- **Access project funds directly** -- No payout limits are configured (the `fundAccessLimitGroups` for the loan contract provide surplus allowances, not payout limits). The split operator cannot withdraw funds from the treasury.
-- **Transfer project ownership** -- The project NFT is permanently held by `REVDeployer`. There is no mechanism to transfer it out.
-- **Pause payments or cash-outs** -- The revnet ruleset flags are set at deployment and cannot be changed.
-- **Override the cash-out tax rate** -- The 10% tax is baked into the stage configuration.
-- **Change the fee rate** -- The 2.5% protocol fee is a constant in `REVDeployer` (`FEE = 25`), not configurable.
-- **Upgrade contracts** -- There is no proxy pattern or upgrade mechanism. All contracts are immutable.
+## Source Map
+
+- `script/Deploy.s.sol`
+- `test/FeeProjectDeployerFork.t.sol`
+- `test/FeeProjectEdgeCases.t.sol`
