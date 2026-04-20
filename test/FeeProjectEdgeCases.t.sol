@@ -34,6 +34,7 @@ import {IJBPriceFeed} from "@bananapus/core-v6/src/interfaces/IJBPriceFeed.sol";
 import {JB721TiersHook} from "@bananapus/721-hook-v6/src/JB721TiersHook.sol";
 import {JB721TiersHookDeployer} from "@bananapus/721-hook-v6/src/JB721TiersHookDeployer.sol";
 import {JB721TiersHookStore} from "@bananapus/721-hook-v6/src/JB721TiersHookStore.sol";
+import {JB721CheckpointsDeployer} from "@bananapus/721-hook-v6/src/JB721CheckpointsDeployer.sol";
 import {IJB721TiersHookStore} from "@bananapus/721-hook-v6/src/interfaces/IJB721TiersHookStore.sol";
 import {IJB721TiersHookDeployer} from "@bananapus/721-hook-v6/src/interfaces/IJB721TiersHookDeployer.sol";
 
@@ -180,7 +181,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         jbPermissions = new JBPermissions(TRUSTED_FORWARDER);
         jbProjects = new JBProjects(MULTISIG, address(0), TRUSTED_FORWARDER);
         jbDirectory = new JBDirectory(jbPermissions, jbProjects, MULTISIG);
-        JBERC20 jbErc20 = new JBERC20();
+        JBERC20 jbErc20 = new JBERC20(jbPermissions, jbProjects);
         jbTokens = new JBTokens(jbDirectory, jbErc20);
         jbRulesets = new JBRulesets(jbDirectory);
         jbPrices = new JBPrices(jbDirectory, jbPermissions, jbProjects, MULTISIG, TRUSTED_FORWARDER);
@@ -245,8 +246,16 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         suckerRegistry = new JBSuckerRegistry(jbDirectory, jbPermissions, MULTISIG, TRUSTED_FORWARDER);
 
         JB721TiersHookStore hookStore = new JB721TiersHookStore();
+        JB721CheckpointsDeployer checkpointsDeployer = new JB721CheckpointsDeployer();
         JB721TiersHook exampleHook = new JB721TiersHook(
-            jbDirectory, jbPermissions, jbPrices, jbRulesets, hookStore, jbSplits, TRUSTED_FORWARDER
+            jbDirectory,
+            jbPermissions,
+            jbPrices,
+            jbRulesets,
+            hookStore,
+            jbSplits,
+            checkpointsDeployer,
+            TRUSTED_FORWARDER
         );
         IJBAddressRegistry addressRegistry = new JBAddressRegistry();
         hookDeployer = new JB721TiersHookDeployer(
@@ -278,7 +287,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
 
         loansContract = new REVLoans({
             controller: jbController,
-            projects: jbProjects,
+            suckerRegistry: suckerRegistry,
             revId: FEE_PROJECT_ID,
             owner: address(this),
             permit2: permit2Instance,
@@ -286,8 +295,9 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         });
 
         // ── Deploy REVOwner (runtime data hook) ──
-        REVOwner revOwner =
-            new REVOwner(buybackRegistry, jbDirectory, FEE_PROJECT_ID, suckerRegistry, address(loansContract));
+        REVOwner revOwner = new REVOwner(
+            buybackRegistry, jbDirectory, FEE_PROJECT_ID, suckerRegistry, address(loansContract), address(0)
+        );
 
         // ── Deploy REVDeployer ──
         revDeployer = new REVDeployer{salt: "REVDeployer_Edge"}(
