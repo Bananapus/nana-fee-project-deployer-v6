@@ -17,12 +17,12 @@ The deployment sets up:
 
 - the fee project's token and staged Revnet economics
 - router terminal support for broader payment acceptance
-- chain-specific sucker connectivity for the supported mainnet or testnet set
+- chain-specific sucker connectivity for the supported chain set
 - auto-issuance allocations defined at deployment time
 
-Use this repo when deploying or rehearsing protocol fee project `#1`. Do not treat it as a general-purpose Revnet deployer; that belongs in `revnet-core-v6`.
+Use this repo when deploying or rehearsing protocol fee project `#1`. Do not treat it as a general-purpose Revnet deployer. That belongs in `revnet-core-v6`.
 
-If the question is "how do Revnets work?" or "how do router terminals behave?" start in those repos first. This repo is mostly packaging a specific ecosystem-critical deployment.
+If the question is "how do Revnets work?" or "how do router terminals behave?" start in those repos first. This repo mostly packages one ecosystem-critical deployment.
 
 ## Key Script
 
@@ -49,17 +49,17 @@ This repo owns one thing: the exact deployment shape of the protocol fee recipie
 
 ## Integration Traps
 
-- this repo is mostly packaging, so many runtime assumptions actually live in sibling repos it composes
+- this repo is mostly packaging, so many runtime assumptions live in sibling repos it composes
 - fee-project deployment order matters because other packages may assume project `#1` already exists
-- all chains in a deployment set must write the same auto-issuance entries so the resulting ruleset hash stays aligned across chains
-- terminal selection is configured during deployment but is not directory-locked by this repo, so operators should lock terminals afterward if silent redirection risk is unacceptable
-- misconfigured stages or auto-issuance settings can be economically correct at compile time and still be operationally wrong
+- all chains in a deployment set must write matching auto-issuance entries so the resulting ruleset hash stays aligned
+- terminal selection is configured during deployment but not directory-locked here
+- misconfigured stages or auto-issuance settings can be operationally wrong even if they compile and deploy cleanly
 
 ## Where State Lives
 
-- deployment orchestration lives in `script/Deploy.s.sol`
-- the deployed fee project's runtime state lives in the core, revnet, router-terminal, and sucker surfaces this repo wires together
-- invariant assumptions about project `#1` live across the wider ecosystem, not only in this repo
+- deployment orchestration: `script/Deploy.s.sol`
+- runtime fee-project state: the core, revnet, router-terminal, and sucker surfaces this repo wires together
+- assumptions about project `#1`: across the wider ecosystem, not only in this repo
 
 ## Install
 
@@ -82,7 +82,7 @@ Useful scripts:
 
 ## Deployment Notes
 
-This repo depends on addresses and artifacts from the core, router terminal, sucker, ownable, 721, and revnet packages. On Ethereum mainnet and Sepolia it configures three L2 sucker deployers; on the supported L2s it configures the corresponding L2-to-mainnet path. Terminal configurations are set in `deployFor` but not directory-locked here, so the fee project operator should lock them after deployment if that routing surface should be fixed. It should be deployed before broader fee-bearing protocol activity is expected.
+This repo depends on addresses and artifacts from the core, router terminal, sucker, ownable, 721, and revnet packages. It should be deployed before broader fee-bearing protocol activity is expected.
 
 ## Repository Layout
 
