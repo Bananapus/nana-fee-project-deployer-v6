@@ -3,7 +3,7 @@
 ## Use This File For
 
 - Use this file when the task is about deploying or rehearing protocol fee project `#1`, checking its project shape, or validating assumptions that the broader ecosystem makes about the fee beneficiary.
-- Start here, then open the deploy script or focused tests that cover fee-project configuration and edge cases.
+- Start here, then decide whether the issue is fee-project deployment shape, ordering, or a downstream repo incorrectly assuming what project `#1` looks like.
 
 ## Read This Next
 
@@ -11,6 +11,7 @@
 |---|---|
 | Repo overview and deployment intent | [`README.md`](./README.md), [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
 | Canonical deployment behavior | [`script/Deploy.s.sol`](./script/Deploy.s.sol) |
+| Runtime and operational assumptions | [`references/runtime.md`](./references/runtime.md), [`references/operations.md`](./references/operations.md) |
 | Fork or edge validation | [`test/FeeProjectDeployerFork.t.sol`](./test/FeeProjectDeployerFork.t.sol), [`test/FeeProjectEdgeCases.t.sol`](./test/FeeProjectEdgeCases.t.sol), [`test/TestFeeProjectDeployer.sol`](./test/TestFeeProjectDeployer.sol) |
 
 ## Repo Map
@@ -33,4 +34,6 @@ Deployment packaging for Juicebox fee project `#1`, the ecosystem-wide fee benef
 
 - Start in [`script/Deploy.s.sol`](./script/Deploy.s.sol). This repo is packaging, not a general-purpose protocol module.
 - Treat project `#1` assumptions as ecosystem-critical. Small configuration mistakes here ripple widely.
+- Fork and edge-case tests matter more than unit-style confidence here because the repo exists to package composed behavior.
+- Terminal configuration for the fee project is itself part of the risk surface. Downstream fee paths may fail even when the project deploys cleanly.
 - When debugging behavior, confirm whether the source is this deployment shape or a downstream revnet/router/sucker repo it composes.
