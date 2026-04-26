@@ -44,8 +44,9 @@ contract CodexNemesisProjectOneSquatTest is Test {
         prices = new JBPrices(directory, permissions, projects, MULTISIG, address(0));
         splits = new JBSplits(directory);
         fundAccess = new JBFundAccessLimits(directory);
-        controller =
-            new JBController(directory, fundAccess, permissions, prices, projects, rulesets, splits, tokens, address(0), address(0));
+        controller = new JBController(
+            directory, fundAccess, permissions, prices, projects, rulesets, splits, tokens, address(0), address(0)
+        );
 
         vm.prank(MULTISIG);
         directory.setIsAllowedToSetFirstController(address(controller), true);
@@ -118,7 +119,9 @@ contract CodexNemesisProjectOneSquatTest is Test {
             memo: ""
         });
 
-        assertTrue(address(directory.controllerOf(1)) != address(0), "attacker can pre-configure controller for project 1");
+        assertTrue(
+            address(directory.controllerOf(1)) != address(0), "attacker can pre-configure controller for project 1"
+        );
         assertEq(
             address(directory.controllerOf(1)),
             address(controller),
