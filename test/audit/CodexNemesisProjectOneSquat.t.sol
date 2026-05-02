@@ -114,6 +114,7 @@ contract CodexNemesisProjectOneSquatTest is Test {
         vm.prank(ATTACKER);
         controller.launchRulesetsFor({
             projectId: 1,
+            projectUri: "",
             rulesetConfigurations: rulesetConfigurations,
             terminalConfigurations: new JBTerminalConfig[](0),
             memo: ""

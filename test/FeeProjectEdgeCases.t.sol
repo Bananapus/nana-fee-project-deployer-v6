@@ -246,7 +246,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         suckerRegistry = new JBSuckerRegistry(jbDirectory, jbPermissions, MULTISIG, TRUSTED_FORWARDER);
 
         JB721TiersHookStore hookStore = new JB721TiersHookStore();
-        JB721CheckpointsDeployer checkpointsDeployer = new JB721CheckpointsDeployer();
+        JB721CheckpointsDeployer checkpointsDeployer = new JB721CheckpointsDeployer(hookStore);
         JB721TiersHook exampleHook = new JB721TiersHook(
             jbDirectory,
             jbPermissions,
