@@ -181,9 +181,12 @@ contract FeeProjectConfigBuilder {
         JBTokenMapping[] memory tokenMappings = buildTokenMappings();
 
         JBSuckerDeployerConfig[] memory suckerDeployerConfigurations = new JBSuckerDeployerConfig[](3);
-        suckerDeployerConfigurations[0] = JBSuckerDeployerConfig({deployer: opDeployer, mappings: tokenMappings});
-        suckerDeployerConfigurations[1] = JBSuckerDeployerConfig({deployer: baseDeployer, mappings: tokenMappings});
-        suckerDeployerConfigurations[2] = JBSuckerDeployerConfig({deployer: arbDeployer, mappings: tokenMappings});
+        suckerDeployerConfigurations[0] =
+            JBSuckerDeployerConfig({deployer: opDeployer, peer: bytes32(0), mappings: tokenMappings});
+        suckerDeployerConfigurations[1] =
+            JBSuckerDeployerConfig({deployer: baseDeployer, peer: bytes32(0), mappings: tokenMappings});
+        suckerDeployerConfigurations[2] =
+            JBSuckerDeployerConfig({deployer: arbDeployer, peer: bytes32(0), mappings: tokenMappings});
 
         return REVSuckerDeploymentConfig({deployerConfigurations: suckerDeployerConfigurations, salt: SUCKER_SALT});
     }
@@ -196,7 +199,8 @@ contract FeeProjectConfigBuilder {
         JBTokenMapping[] memory tokenMappings = buildTokenMappings();
 
         JBSuckerDeployerConfig[] memory suckerDeployerConfigurations = new JBSuckerDeployerConfig[](1);
-        suckerDeployerConfigurations[0] = JBSuckerDeployerConfig({deployer: l2Deployer, mappings: tokenMappings});
+        suckerDeployerConfigurations[0] =
+            JBSuckerDeployerConfig({deployer: l2Deployer, peer: bytes32(0), mappings: tokenMappings});
 
         return REVSuckerDeploymentConfig({deployerConfigurations: suckerDeployerConfigurations, salt: SUCKER_SALT});
     }

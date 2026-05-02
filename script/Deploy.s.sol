@@ -31,6 +31,8 @@ import {Sphinx} from "@sphinx-labs/contracts/contracts/foundry/SphinxPlugin.sol"
 import {Script} from "forge-std/Script.sol";
 
 contract DeployScript is Script, Sphinx {
+    error DeployScript_FeeProjectNotCanonical(uint256 projectId);
+
     /// @notice tracks the deployment of the core contracts for the chain we are deploying to.
     CoreDeployment core;
     /// @notice tracks the deployment of the revnet contracts for the chain we are deploying to.
@@ -182,13 +184,13 @@ contract DeployScript is Script, Sphinx {
             suckerDeployerConfigurations = new JBSuckerDeployerConfig[](3);
             // OP
             suckerDeployerConfigurations[0] =
-                JBSuckerDeployerConfig({deployer: suckers.optimismDeployer, mappings: tokenMappings});
+                JBSuckerDeployerConfig({deployer: suckers.optimismDeployer, peer: bytes32(0), mappings: tokenMappings});
 
             suckerDeployerConfigurations[1] =
-                JBSuckerDeployerConfig({deployer: suckers.baseDeployer, mappings: tokenMappings});
+                JBSuckerDeployerConfig({deployer: suckers.baseDeployer, peer: bytes32(0), mappings: tokenMappings});
 
             suckerDeployerConfigurations[2] =
-                JBSuckerDeployerConfig({deployer: suckers.arbitrumDeployer, mappings: tokenMappings});
+                JBSuckerDeployerConfig({deployer: suckers.arbitrumDeployer, peer: bytes32(0), mappings: tokenMappings});
         } else {
             suckerDeployerConfigurations = new JBSuckerDeployerConfig[](1);
             // L2 -> Mainnet
@@ -196,6 +198,7 @@ contract DeployScript is Script, Sphinx {
                 deployer: address(suckers.optimismDeployer) != address(0)
                     ? suckers.optimismDeployer
                     : address(suckers.baseDeployer) != address(0) ? suckers.baseDeployer : suckers.arbitrumDeployer,
+                peer: bytes32(0),
                 mappings: tokenMappings
             });
 
@@ -208,8 +211,11 @@ contract DeployScript is Script, Sphinx {
         REVSuckerDeploymentConfig memory suckerDeploymentConfiguration =
             REVSuckerDeploymentConfig({deployerConfigurations: suckerDeployerConfigurations, salt: SUCKER_SALT});
 
-        // Skip deployment if the fee project already has a controller configured.
-        if (address(core.controller.DIRECTORY().controllerOf(feeProjectId)) != address(0)) return;
+        // Skip deployment only if the fee project is already the canonical NANA revnet.
+        if (address(core.controller.DIRECTORY().controllerOf(feeProjectId)) != address(0)) {
+            if (!_feeProjectIsCanonical(feeProjectId)) revert DeployScript_FeeProjectNotCanonical(feeProjectId);
+            return;
+        }
 
         // Approve the basic deployer to configure the project.
         core.projects.approve({to: address(revnet.basic_deployer), tokenId: feeProjectId});
@@ -222,5 +228,23 @@ contract DeployScript is Script, Sphinx {
                 terminalConfigurations: terminalConfigurations,
                 suckerDeploymentConfiguration: suckerDeploymentConfiguration
             });
+    }
+
+    function _feeProjectIsCanonical(uint256 feeProjectId) internal view returns (bool) {
+        if (core.projects.ownerOf(feeProjectId) != address(revnet.basic_deployer)) return false;
+        if (address(core.controller.DIRECTORY().controllerOf(feeProjectId)) != address(core.controller)) return false;
+        if (revnet.basic_deployer.hashedEncodedConfigurationOf(feeProjectId) == bytes32(0)) return false;
+        if (!_projectTokenSymbolIs({projectId: feeProjectId, expectedSymbol: SYMBOL})) return false;
+        return true;
+    }
+
+    function _projectTokenSymbolIs(uint256 projectId, string memory expectedSymbol) internal view returns (bool) {
+        address token = address(core.tokens.tokenOf(projectId));
+        if (token == address(0)) return false;
+
+        (bool success, bytes memory data) = token.staticcall(abi.encodeWithSignature("symbol()"));
+        if (!success || data.length < 32) return false;
+
+        return keccak256(bytes(abi.decode(data, (string)))) == keccak256(bytes(expectedSymbol));
     }
 }
