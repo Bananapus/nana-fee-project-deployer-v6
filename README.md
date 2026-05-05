@@ -71,8 +71,8 @@ npm install @bananapus/fee-project-deployer-v6
 
 ```bash
 npm install
-forge build
-forge test
+forge build --deny notes --skip "*/test/**" --skip "*/script/**"
+forge test --deny notes
 ```
 
 Useful scripts:
