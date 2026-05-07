@@ -80,7 +80,7 @@ contract DeployScript is Script, Sphinx {
         revnet = RevnetCoreDeploymentLib.getDeployment(
             vm.envOr("REVNET_CORE_DEPLOYMENT_PATH", string("node_modules/@rev-net/core-v6/deployments/"))
         );
-        // Get the deployment addresses for the swap terminal contracts for this chain.
+        // Get the deployment addresses for the router terminal contracts for this chain.
         routerTerminal = RouterTerminalDeploymentLib.getDeployment(
             vm.envOr(
                 "NANA_ROUTER_TERMINAL_DEPLOYMENT_PATH",

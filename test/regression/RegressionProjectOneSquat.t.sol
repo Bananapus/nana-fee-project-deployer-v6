@@ -21,7 +21,7 @@ import {JBRulesetMetadata} from "@bananapus/core-v6/src/structs/JBRulesetMetadat
 import {JBSplitGroup} from "@bananapus/core-v6/src/structs/JBSplitGroup.sol";
 import {JBTerminalConfig} from "@bananapus/core-v6/src/structs/JBTerminalConfig.sol";
 
-contract CodexNemesisProjectOneSquatTest is Test {
+contract RegressionProjectOneSquatTest is Test {
     address internal constant MULTISIG = address(uint160(uint256(keccak256("multisig"))));
     address internal constant ATTACKER = address(uint160(uint256(keccak256("attacker"))));
 

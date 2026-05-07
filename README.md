@@ -7,7 +7,7 @@ User journeys: [USER_JOURNEYS.md](./USER_JOURNEYS.md)
 Skills: [SKILLS.md](./SKILLS.md)  
 Risks: [RISKS.md](./RISKS.md)  
 Administration: [ADMINISTRATION.md](./ADMINISTRATION.md)  
-Audit instructions: [AUDIT_INSTRUCTIONS.md](./AUDIT_INSTRUCTIONS.md)
+Review instructions: [REVIEW_GUIDE.md](./REVIEW_GUIDE.md)
 
 ## Overview
 
@@ -45,7 +45,7 @@ This repo owns one thing: the exact deployment shape of the protocol fee recipie
 1. `test/TestFeeProjectDeployer.sol`
 2. `test/FeeProjectEdgeCases.t.sol`
 3. `test/FeeProjectDeployerFork.t.sol`
-4. `test/audit/LateStartTime.t.sol`
+4. `test/regression/LateStartTime.t.sol`
 
 ## Integration Traps
 
