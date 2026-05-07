@@ -10,7 +10,7 @@ import {REVSuckerDeploymentConfig} from "@rev-net/core-v6/src/structs/REVSuckerD
 import {FeeProjectConfigBuilder} from "../TestFeeProjectDeployer.sol";
 import {FeeProjectEdgeCases} from "../FeeProjectEdgeCases.t.sol";
 
-contract CodexOperatorDriftTest is Test {
+contract RegressionOperatorDriftTest is Test {
     address internal constant CANONICAL_NANA_OPERATOR = 0x80a8F7a4bD75b539CE26937016Df607fdC9ABeb5;
 
     FeeProjectConfigBuilder internal builder;
@@ -57,7 +57,7 @@ contract CodexOperatorDriftTest is Test {
     }
 }
 
-contract CodexReplayNotIdempotentTest is FeeProjectEdgeCases {
+contract RegressionReplayNotIdempotentTest is FeeProjectEdgeCases {
     function test_secondFeeProjectDeploymentReverts() public {
         _deployFeeProject();
 

@@ -14,4 +14,4 @@
 
 - [`test/FeeProjectDeployerFork.t.sol`](../test/FeeProjectDeployerFork.t.sol) for live assumptions.
 - [`test/FeeProjectEdgeCases.t.sol`](../test/FeeProjectEdgeCases.t.sol) and [`test/TestFeeProjectDeployer.sol`](../test/TestFeeProjectDeployer.sol) for deployment-shape edge cases.
-- [`test/audit/LateStartTime.t.sol`](../test/audit/LateStartTime.t.sol) for the timing edge that can silently corrupt the fee project's intended lifecycle.
+- [`test/regression/LateStartTime.t.sol`](../test/regression/LateStartTime.t.sol) for the timing edge that can silently corrupt the fee project's intended lifecycle.

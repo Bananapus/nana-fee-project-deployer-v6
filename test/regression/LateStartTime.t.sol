@@ -16,11 +16,11 @@ import {REVSuckerDeploymentConfig} from "@rev-net/core-v6/src/structs/REVSuckerD
 
 import {FeeProjectEdgeCases} from "../FeeProjectEdgeCases.t.sol";
 
-contract LateStartTimeAuditTest is FeeProjectEdgeCases {
+contract LateStartTimeRegressionTest is FeeProjectEdgeCases {
     uint48 internal constant SCRIPT_NANA_START_TIME = 1_740_089_444; // 2025-02-20 22:10:44 UTC
     uint256 internal constant LATE_DEPLOY_TS = 1_774_915_200; // 2026-03-31 00:00:00 UTC
 
-    function test_audit_lateDeploymentStartsWithDecayedIssuance() public {
+    function test_regression_lateDeploymentStartsWithDecayedIssuance() public {
         vm.warp(LATE_DEPLOY_TS);
 
         JBAccountingContext[] memory accountingContexts = new JBAccountingContext[](1);
