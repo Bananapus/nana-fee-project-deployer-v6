@@ -1,8 +1,8 @@
-# Review Guide
+# Audit Instructions
 
-This repo is a deployment package for protocol fee project `#1`. Review it as configuration-critical deployment logic.
+This repo is a deployment package for protocol fee project `#1`. Audit it as configuration-critical deployment logic.
 
-## Review Objective
+## Audit Objective
 
 Find issues that:
 

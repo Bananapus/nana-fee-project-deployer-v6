@@ -7,7 +7,7 @@ This repo deploys protocol fee project `#1` in the intended V6 shape.
 ## Primary Actors
 
 - operators deploying the canonical fee project
-- reviewers verifying that project `#1` matches ecosystem assumptions
+- auditors verifying that project `#1` matches ecosystem assumptions
 - engineers rehearsing or replaying deployment flows
 
 ## Key Surfaces
@@ -40,7 +40,7 @@ This repo deploys protocol fee project `#1` in the intended V6 shape.
 
 ## Journey 2: Verify Cross-Chain Parity
 
-**Actor:** operator or reviewer.
+**Actor:** operator or auditor.
 
 **Intent:** confirm that the deployment set matches across chains where it should.
 
