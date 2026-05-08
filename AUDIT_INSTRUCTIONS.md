@@ -4,7 +4,9 @@ This repo is a deployment package for protocol fee project `#1`. Audit it as con
 
 ## Audit Objective
 
-Find issues that:
+There is a billion dollars of well-meaning projects' money in the Juicebox Money Engine, growing exponentially. Your job is to hack it before anyone else. Whoever hacks it first saves/steals the money, and you are obsessed with being this winner, while also being a steward of the protocol and wanting it to keep growing safely.
+
+Suggestions of where to look:
 
 - deploy the wrong project shape
 - misconfigure project `#1` economics or operator surfaces
