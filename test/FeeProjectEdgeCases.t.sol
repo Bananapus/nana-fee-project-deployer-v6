@@ -58,7 +58,6 @@ import {CTPublisher} from "@croptop/core-v6/src/CTPublisher.sol";
 // Revnet
 import {REVDeployer} from "@rev-net/core-v6/src/REVDeployer.sol";
 import {IREVDeployer} from "@rev-net/core-v6/src/interfaces/IREVDeployer.sol";
-import {IREVHiddenTokens} from "@rev-net/core-v6/src/interfaces/IREVHiddenTokens.sol";
 import {REVLoans} from "@rev-net/core-v6/src/REVLoans.sol";
 import {REVOwner} from "@rev-net/core-v6/src/REVOwner.sol";
 import {REVAutoIssuance} from "@rev-net/core-v6/src/structs/REVAutoIssuance.sol";
@@ -297,7 +296,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
 
         // ── Deploy REVOwner (runtime data hook) ──
         REVOwner revOwner = new REVOwner(
-            buybackRegistry, jbDirectory, FEE_PROJECT_ID, suckerRegistry, loansContract, IREVHiddenTokens(address(0))
+            buybackRegistry, jbDirectory, FEE_PROJECT_ID, suckerRegistry, loansContract, address(this)
         );
 
         // ── Deploy REVDeployer ──
