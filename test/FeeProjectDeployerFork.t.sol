@@ -289,9 +289,8 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         });
 
         // ── Deploy REVOwner (runtime data hook) ──
-        REVOwner revOwner = new REVOwner(
-            buybackRegistry, jbDirectory, FEE_PROJECT_ID, suckerRegistry, loansContract, address(this)
-        );
+        REVOwner revOwner =
+            new REVOwner(buybackRegistry, jbDirectory, FEE_PROJECT_ID, suckerRegistry, loansContract, address(this));
 
         // ── Deploy REVDeployer ──
         revDeployer = new REVDeployer{salt: "REVDeployer_Fork"}(
@@ -374,6 +373,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
             description: REVDescription({name: NAME, ticker: SYMBOL, uri: PROJECT_URI, salt: ERC20_SALT}),
             baseCurrency: ETH_CURRENCY,
             splitOperator: OPERATOR,
+            scopeCashOutsToLocalBalances: false,
             stageConfigurations: stages
         });
 

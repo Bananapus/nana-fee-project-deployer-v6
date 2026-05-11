@@ -156,6 +156,7 @@ contract FeeProjectConfigBuilder {
             description: REVDescription({name: NAME, ticker: SYMBOL, uri: PROJECT_URI, salt: ERC20_SALT}),
             baseCurrency: ETH_CURRENCY,
             splitOperator: operator_,
+            scopeCashOutsToLocalBalances: false,
             stageConfigurations: buildStageConfigurations(operator_)
         });
     }
