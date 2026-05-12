@@ -60,7 +60,6 @@ import {CTPublisher} from "@croptop/core-v6/src/CTPublisher.sol";
 // Revnet
 import {REVDeployer} from "@rev-net/core-v6/src/REVDeployer.sol";
 import {IREVDeployer} from "@rev-net/core-v6/src/interfaces/IREVDeployer.sol";
-import {IREVHiddenTokens} from "@rev-net/core-v6/src/interfaces/IREVHiddenTokens.sol";
 import {REVLoans} from "@rev-net/core-v6/src/REVLoans.sol";
 import {REVOwner} from "@rev-net/core-v6/src/REVOwner.sol";
 import {REVAutoIssuance} from "@rev-net/core-v6/src/structs/REVAutoIssuance.sol";
@@ -290,9 +289,8 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         });
 
         // ── Deploy REVOwner (runtime data hook) ──
-        REVOwner revOwner = new REVOwner(
-            buybackRegistry, jbDirectory, FEE_PROJECT_ID, suckerRegistry, loansContract, IREVHiddenTokens(address(0))
-        );
+        REVOwner revOwner =
+            new REVOwner(buybackRegistry, jbDirectory, FEE_PROJECT_ID, suckerRegistry, loansContract, address(this));
 
         // ── Deploy REVDeployer ──
         revDeployer = new REVDeployer{salt: "REVDeployer_Fork"}(
@@ -375,6 +373,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
             description: REVDescription({name: NAME, ticker: SYMBOL, uri: PROJECT_URI, salt: ERC20_SALT}),
             baseCurrency: ETH_CURRENCY,
             splitOperator: OPERATOR,
+            scopeCashOutsToLocalBalances: false,
             stageConfigurations: stages
         });
 
