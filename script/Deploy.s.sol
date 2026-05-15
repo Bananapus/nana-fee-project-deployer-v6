@@ -167,7 +167,7 @@ contract DeployScript is Script, Sphinx {
         REVConfig memory revnetConfiguration = REVConfig({
             description: REVDescription({name: NAME, ticker: SYMBOL, uri: PROJECT_URI, salt: ERC20_SALT}),
             baseCurrency: ETH_CURRENCY,
-            splitOperator: operator,
+            operator: operator,
             scopeCashOutsToLocalBalances: false,
             stageConfigurations: stageConfigurations
         });
