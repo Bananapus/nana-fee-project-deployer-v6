@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.24 — Bump v6 deps to nana-core-v6 0.0.53 cohort
+
+- `@bananapus/core-v6`: `^0.0.49 → ^0.0.53` ([PR #145](https://github.com/Bananapus/nana-core-v6/pull/145)).
+- `@bananapus/721-hook-v6`: `^0.0.49 → ^0.0.50`.
+- `@bananapus/buyback-hook-v6`: `^0.0.45 → ^0.0.46`.
+- `@bananapus/suckers-v6`: `^0.0.43 → ^0.0.46`.
+- All `JBRulesetMetadata` literals (src + test) patched to include `pauseCrossProjectFeeFreeInflows: false`.
+
 ## Scope
 
 This file describes the verified change from `nana-fee-project-deployer-v5` to the current `nana-fee-project-deployer-v6` repo.
