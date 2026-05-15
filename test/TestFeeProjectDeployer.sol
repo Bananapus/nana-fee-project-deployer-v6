@@ -155,7 +155,7 @@ contract FeeProjectConfigBuilder {
         return REVConfig({
             description: REVDescription({name: NAME, ticker: SYMBOL, uri: PROJECT_URI, salt: ERC20_SALT}),
             baseCurrency: ETH_CURRENCY,
-            splitOperator: operator_,
+            operator: operator_,
             scopeCashOutsToLocalBalances: false,
             stageConfigurations: buildStageConfigurations(operator_)
         });
@@ -445,9 +445,9 @@ contract TestFeeProjectDeployer is Test {
         assertEq(config.baseCurrency, ETH_CURRENCY, "Base currency is ETH");
     }
 
-    function test_revnetSplitOperator() public view {
+    function test_revnetOperator() public view {
         REVConfig memory config = builder.buildRevnetConfiguration(operatorAddr);
-        assertEq(config.splitOperator, operatorAddr, "Split operator is operator");
+        assertEq(config.operator, operatorAddr, "Split operator is operator");
     }
 
     function test_revnetHasOneStage() public view {
@@ -656,7 +656,7 @@ contract TestFeeProjectDeployer is Test {
             "Recorded config ticker matches"
         );
         assertEq(recordedConfig.baseCurrency, ETH_CURRENCY, "Recorded base currency matches");
-        assertEq(recordedConfig.splitOperator, operatorAddr, "Recorded split operator matches");
+        assertEq(recordedConfig.operator, operatorAddr, "Recorded operator matches");
         assertEq(recordedTerminals.length, 2, "Recorded 2 terminals");
         assertEq(recordedSuckers.salt, SUCKER_SALT, "Recorded sucker salt");
     }
@@ -750,8 +750,8 @@ contract TestFeeProjectDeployer is Test {
         REVConfig memory config = builder.buildRevnetConfiguration(operatorAddr);
         JBSplit[] memory splits = config.stageConfigurations[0].splits;
 
-        // The split beneficiary must be the same as the splitOperator.
-        assertEq(splits[0].beneficiary, config.splitOperator, "Split beneficiary matches split operator");
+        // The split beneficiary must be the same as the operator.
+        assertEq(splits[0].beneficiary, config.operator, "Split beneficiary matches operator");
     }
 
     function test_splitHasNoProjectRedirect() public view {
@@ -850,8 +850,8 @@ contract TestFeeProjectDeployer is Test {
         REVConfig memory config = builder.buildRevnetConfiguration(operatorAddr);
         REVStageConfig memory stage = config.stageConfigurations[0];
 
-        // splitOperator.
-        assertEq(config.splitOperator, operatorAddr, "Split operator");
+        // operator.
+        assertEq(config.operator, operatorAddr, "Split operator");
 
         // Split beneficiary.
         assertEq(stage.splits[0].beneficiary, operatorAddr, "Split beneficiary");
@@ -906,7 +906,7 @@ contract TestFeeProjectDeployer is Test {
         // Top-level.
         assertEq(revnetId, FEE_PROJECT_ID);
         assertEq(rc.baseCurrency, config.baseCurrency);
-        assertEq(rc.splitOperator, config.splitOperator);
+        assertEq(rc.operator, config.operator);
         assertEq(rc.description.salt, config.description.salt);
 
         // Stage: auto issuances.
@@ -974,7 +974,7 @@ contract TestFeeProjectDeployer is Test {
         // Structure invariants hold for any operator.
         assertEq(config.stageConfigurations.length, 1, "Always 1 stage");
         assertEq(config.baseCurrency, ETH_CURRENCY, "Base currency always ETH");
-        assertEq(config.splitOperator, op, "Split operator matches provided address");
+        assertEq(config.operator, op, "Split operator matches provided address");
         assertEq(config.stageConfigurations[0].splits[0].beneficiary, op, "Split beneficiary matches");
 
         for (uint256 i = 0; i < config.stageConfigurations[0].autoIssuances.length; i++) {

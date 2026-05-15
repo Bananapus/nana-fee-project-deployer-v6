@@ -26,7 +26,7 @@ contract RegressionOperatorDriftTest is Test {
         REVConfig memory deployedByThisRepo = builder.buildRevnetConfiguration(sphinxSafe);
         REVConfig memory canonicalDeployment = builder.buildRevnetConfiguration(CANONICAL_NANA_OPERATOR);
 
-        assertEq(deployedByThisRepo.splitOperator, sphinxSafe, "current script routes split operator to the Safe");
+        assertEq(deployedByThisRepo.operator, sphinxSafe, "current script routes operator to the Safe");
         assertEq(
             deployedByThisRepo.stageConfigurations[0].splits[0].beneficiary,
             sphinxSafe,
@@ -38,7 +38,7 @@ contract RegressionOperatorDriftTest is Test {
             "auto-issuance beneficiary routes to the Safe"
         );
 
-        assertEq(canonicalDeployment.splitOperator, CANONICAL_NANA_OPERATOR, "canonical deploy-all operator");
+        assertEq(canonicalDeployment.operator, CANONICAL_NANA_OPERATOR, "canonical deploy-all operator");
         assertEq(
             canonicalDeployment.stageConfigurations[0].splits[0].beneficiary,
             CANONICAL_NANA_OPERATOR,
@@ -51,7 +51,7 @@ contract RegressionOperatorDriftTest is Test {
         );
 
         assertTrue(
-            deployedByThisRepo.splitOperator != canonicalDeployment.splitOperator,
+            deployedByThisRepo.operator != canonicalDeployment.operator,
             "using safeAddress changes the fee project's operator surface"
         );
     }

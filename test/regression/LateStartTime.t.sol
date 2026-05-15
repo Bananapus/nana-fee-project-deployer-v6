@@ -62,7 +62,7 @@ contract LateStartTimeRegressionTest is FeeProjectEdgeCases {
         REVConfig memory config = REVConfig({
             description: REVDescription({name: NAME, ticker: SYMBOL, uri: PROJECT_URI, salt: ERC20_SALT}),
             baseCurrency: ETH_CURRENCY,
-            splitOperator: OPERATOR,
+            operator: OPERATOR,
             scopeCashOutsToLocalBalances: false,
             stageConfigurations: stages
         });

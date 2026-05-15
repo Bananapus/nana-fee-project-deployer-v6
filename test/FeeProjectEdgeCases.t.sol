@@ -264,17 +264,17 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
 
         publisher = new CTPublisher(jbDirectory, jbPermissions, FEE_PROJECT_ID, TRUSTED_FORWARDER);
 
-        // Deploy buyback hook with the real PoolManager.
+        // Deploy buyback hook, then bind chain-specific constants (PoolManager + oracleHook).
         JBBuybackHook buybackHook = new JBBuybackHook(
             jbDirectory,
             jbPermissions,
             jbPrices,
             jbProjects,
             jbTokens,
-            IPoolManager(POOL_MANAGER_ADDR),
-            IHooks(address(0)), // oracleHook
+            address(this), // deployer (one-shot setter for chain-specific constants)
             TRUSTED_FORWARDER
         );
+        buybackHook.setChainSpecificConstants({poolManager: IPoolManager(POOL_MANAGER_ADDR), oracleHook: IHooks(address(0))});
 
         JBBuybackHookRegistry registry = new JBBuybackHookRegistry(
             jbPermissions,
@@ -380,7 +380,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         config = REVConfig({
             description: REVDescription({name: NAME, ticker: SYMBOL, uri: PROJECT_URI, salt: ERC20_SALT}),
             baseCurrency: ETH_CURRENCY,
-            splitOperator: OPERATOR,
+            operator: OPERATOR,
             scopeCashOutsToLocalBalances: false,
             stageConfigurations: stages
         });
@@ -429,7 +429,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         config = REVConfig({
             description: REVDescription({name: "TestRevnet", ticker: "TEST", uri: "", salt: erc20Salt}),
             baseCurrency: ETH_CURRENCY,
-            splitOperator: OPERATOR,
+            operator: OPERATOR,
             scopeCashOutsToLocalBalances: false,
             stageConfigurations: stages
         });
