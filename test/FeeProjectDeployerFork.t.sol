@@ -268,7 +268,9 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
             address(this), // deployer (one-shot setter for chain-specific constants)
             TRUSTED_FORWARDER
         );
-        buybackHook.setChainSpecificConstants({poolManager: IPoolManager(POOL_MANAGER_ADDR), oracleHook: IHooks(address(0))});
+        buybackHook.setChainSpecificConstants({
+            poolManager: IPoolManager(POOL_MANAGER_ADDR), oracleHook: IHooks(address(0))
+        });
 
         JBBuybackHookRegistry registry = new JBBuybackHookRegistry(
             jbPermissions,
