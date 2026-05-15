@@ -102,6 +102,7 @@ contract RegressionProjectOneSquatTest is Test {
                 ownerMustSendPayouts: false,
                 holdFees: false,
                 scopeCashOutsToLocalBalances: false,
+                pauseCrossProjectFeeFreeInflows: false,
                 useDataHookForPay: false,
                 useDataHookForCashOut: false,
                 dataHook: address(0),
