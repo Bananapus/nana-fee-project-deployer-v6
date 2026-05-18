@@ -60,7 +60,7 @@ contract DeployScript is Script, Sphinx {
     address operator;
 
     function configureSphinx() public override {
-        // TODO: Update to contain revnet devs.
+        // Safe owners and threshold are resolved by the Sphinx project config.
         sphinxConfig.projectName = "nana-fee-project";
         sphinxConfig.mainnets = ["ethereum", "optimism", "base", "arbitrum"];
         sphinxConfig.testnets = ["ethereum_sepolia", "optimism_sepolia", "base_sepolia", "arbitrum_sepolia"];
