@@ -275,7 +275,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             TRUSTED_FORWARDER
         );
         buybackHook.setChainSpecificConstants({
-            poolManager: IPoolManager(POOL_MANAGER_ADDR), oracleHook: IHooks(address(0))
+            newPoolManager: IPoolManager(POOL_MANAGER_ADDR), newOracleHook: IHooks(address(0))
         });
 
         JBBuybackHookRegistry registry = new JBBuybackHookRegistry(
@@ -289,6 +289,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
 
         loansContract = new REVLoans({
             controller: jbController,
+            multiTerminal: jbMultiTerminal,
             suckerRegistry: suckerRegistry,
             revId: FEE_PROJECT_ID,
             owner: address(this),
@@ -303,6 +304,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         // ── Deploy REVDeployer ──
         revDeployer = new REVDeployer{salt: "REVDeployer_Edge"}(
             jbController,
+            jbMultiTerminal,
+            jbMultiTerminal,
             suckerRegistry,
             FEE_PROJECT_ID,
             hookDeployer,
@@ -335,7 +338,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         view
         returns (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         )
     {
@@ -344,10 +347,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         accountingContexts[0] =
             JBAccountingContext({token: JBConstants.NATIVE_TOKEN, decimals: 18, currency: NATIVE_CURRENCY});
 
-        terminalConfigs = new JBTerminalConfig[](1);
-        terminalConfigs[0] = JBTerminalConfig({
-            terminal: IJBTerminal(address(jbMultiTerminal)), accountingContextsToAccept: accountingContexts
-        });
+        terminalConfigs = accountingContexts;
 
         // Reserved splits: 100% of reserved tokens go to OPERATOR.
         JBSplit[] memory splits = new JBSplit[](1);
@@ -398,7 +398,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         view
         returns (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         )
     {
@@ -406,10 +406,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         accountingContexts[0] =
             JBAccountingContext({token: JBConstants.NATIVE_TOKEN, decimals: 18, currency: NATIVE_CURRENCY});
 
-        terminalConfigs = new JBTerminalConfig[](1);
-        terminalConfigs[0] = JBTerminalConfig({
-            terminal: IJBTerminal(address(jbMultiTerminal)), accountingContextsToAccept: accountingContexts
-        });
+        terminalConfigs = accountingContexts;
 
         // No reserved splits for simplicity.
         JBSplit[] memory splits = new JBSplit[](0);
@@ -444,7 +441,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
     function _deployFeeProject() internal {
         (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         ) = _buildFeeProjectConfig();
 
@@ -452,7 +449,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         revDeployer.deployFor({
             revnetId: FEE_PROJECT_ID,
             configuration: config,
-            terminalConfigurations: terminalConfigs,
+            accountingContextsToAccept: terminalConfigs,
             suckerDeploymentConfiguration: suckerConfig
         });
     }
@@ -461,14 +458,14 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
     function _deployExternalRevnet(bytes32 erc20Salt) internal returns (uint256 projectId) {
         (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         ) = _buildExternalRevnetConfig(erc20Salt);
 
         (projectId,) = revDeployer.deployFor({
             revnetId: 0,
             configuration: config,
-            terminalConfigurations: terminalConfigs,
+            accountingContextsToAccept: terminalConfigs,
             suckerDeploymentConfiguration: suckerConfig
         });
     }

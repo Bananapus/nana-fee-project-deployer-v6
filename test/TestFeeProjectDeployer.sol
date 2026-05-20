@@ -6,7 +6,6 @@ import {Test} from "forge-std/Test.sol";
 import {JBConstants} from "@bananapus/core-v6/src/libraries/JBConstants.sol";
 import {JBCurrencyIds} from "@bananapus/core-v6/src/libraries/JBCurrencyIds.sol";
 import {JBAccountingContext} from "@bananapus/core-v6/src/structs/JBAccountingContext.sol";
-import {JBTerminalConfig} from "@bananapus/core-v6/src/structs/JBTerminalConfig.sol";
 import {JBSplit} from "@bananapus/core-v6/src/structs/JBSplit.sol";
 import {IJBTerminal} from "@bananapus/core-v6/src/interfaces/IJBTerminal.sol";
 import {IJBSplitHook} from "@bananapus/core-v6/src/interfaces/IJBSplitHook.sol";
@@ -31,7 +30,7 @@ contract MockREVDeployer {
     function deployFor(
         uint256 revnetId,
         REVConfig memory configuration,
-        JBTerminalConfig[] memory terminalConfigurations,
+        JBAccountingContext[] memory accountingContextsToAccept,
         REVSuckerDeploymentConfig memory suckerDeploymentConfiguration
     )
         external
@@ -39,7 +38,7 @@ contract MockREVDeployer {
     {
         deployForCalled = true;
         recordedRevnetId = revnetId;
-        encodedCalldata = abi.encode(revnetId, configuration, terminalConfigurations, suckerDeploymentConfiguration);
+        encodedCalldata = abi.encode(revnetId, configuration, accountingContextsToAccept, suckerDeploymentConfiguration);
         return (revnetId, IJB721TiersHook(address(0)));
     }
 
@@ -49,11 +48,11 @@ contract MockREVDeployer {
         returns (
             uint256 revnetId,
             REVConfig memory configuration,
-            JBTerminalConfig[] memory terminalConfigurations,
+            JBAccountingContext[] memory accountingContextsToAccept,
             REVSuckerDeploymentConfig memory suckerDeploymentConfiguration
         )
     {
-        return abi.decode(encodedCalldata, (uint256, REVConfig, JBTerminalConfig[], REVSuckerDeploymentConfig));
+        return abi.decode(encodedCalldata, (uint256, REVConfig, JBAccountingContext[], REVSuckerDeploymentConfig));
     }
 }
 
@@ -94,18 +93,14 @@ contract FeeProjectConfigBuilder {
     )
         public
         pure
-        returns (JBTerminalConfig[] memory terminalConfigurations)
+        returns (JBAccountingContext[] memory accountingContextsToAccept)
     {
-        JBAccountingContext[] memory accountingContextsToAccept = new JBAccountingContext[](1);
+        multiTerminal;
+        routerTerminalRegistry;
+
+        accountingContextsToAccept = new JBAccountingContext[](1);
         accountingContextsToAccept[0] =
             JBAccountingContext({token: JBConstants.NATIVE_TOKEN, decimals: 18, currency: NATIVE_CURRENCY});
-
-        terminalConfigurations = new JBTerminalConfig[](2);
-        terminalConfigurations[0] =
-            JBTerminalConfig({terminal: multiTerminal, accountingContextsToAccept: accountingContextsToAccept});
-        terminalConfigurations[1] = JBTerminalConfig({
-            terminal: routerTerminalRegistry, accountingContextsToAccept: new JBAccountingContext[](0)
-        });
     }
 
     function buildSplits(address operator_) public pure returns (JBSplit[] memory splits) {
@@ -456,39 +451,21 @@ contract TestFeeProjectDeployer is Test {
     }
 
     // ====================================================================
-    // 4. Terminal Configuration Tests
+    // 4. Accounting Context Tests
     // ====================================================================
 
-    function test_terminalConfigCount() public view {
-        JBTerminalConfig[] memory configs = builder.buildTerminalConfigurations(multiTerminal, routerTerminalRegistry);
-        assertEq(configs.length, 2, "Two terminal configurations");
+    function test_accountingContextCount() public view {
+        JBAccountingContext[] memory configs =
+            builder.buildTerminalConfigurations(multiTerminal, routerTerminalRegistry);
+        assertEq(configs.length, 1, "One accounting context");
     }
 
-    function test_firstTerminalIsMultiTerminal() public view {
-        JBTerminalConfig[] memory configs = builder.buildTerminalConfigurations(multiTerminal, routerTerminalRegistry);
-        assertEq(address(configs[0].terminal), address(multiTerminal), "First terminal is multi terminal");
-    }
-
-    function test_firstTerminalAcceptsNativeToken() public view {
-        JBTerminalConfig[] memory configs = builder.buildTerminalConfigurations(multiTerminal, routerTerminalRegistry);
-
-        JBAccountingContext[] memory contexts = configs[0].accountingContextsToAccept;
-        assertEq(contexts.length, 1, "One accounting context");
-        assertEq(contexts[0].token, JBConstants.NATIVE_TOKEN, "Accepts native token");
-        assertEq(contexts[0].decimals, 18, "18 decimals");
-        assertEq(contexts[0].currency, NATIVE_CURRENCY, "Native currency");
-    }
-
-    function test_secondTerminalIsRouterTerminal() public view {
-        JBTerminalConfig[] memory configs = builder.buildTerminalConfigurations(multiTerminal, routerTerminalRegistry);
-        assertEq(
-            address(configs[1].terminal), address(routerTerminalRegistry), "Second terminal is router terminal registry"
-        );
-    }
-
-    function test_secondTerminalNoAccountingContexts() public view {
-        JBTerminalConfig[] memory configs = builder.buildTerminalConfigurations(multiTerminal, routerTerminalRegistry);
-        assertEq(configs[1].accountingContextsToAccept.length, 0, "Router terminal has no accounting contexts");
+    function test_accountingContextAcceptsNativeToken() public view {
+        JBAccountingContext[] memory configs =
+            builder.buildTerminalConfigurations(multiTerminal, routerTerminalRegistry);
+        assertEq(configs[0].token, JBConstants.NATIVE_TOKEN, "Accepts native token");
+        assertEq(configs[0].decimals, 18, "18 decimals");
+        assertEq(configs[0].currency, NATIVE_CURRENCY, "Native currency");
     }
 
     // ====================================================================
@@ -610,7 +587,7 @@ contract TestFeeProjectDeployer is Test {
 
     function test_deployCallsApproveAndDeployFor() public {
         REVConfig memory config = builder.buildRevnetConfiguration(operatorAddr);
-        JBTerminalConfig[] memory terminalConfigs =
+        JBAccountingContext[] memory terminalConfigs =
             builder.buildTerminalConfigurations(multiTerminal, routerTerminalRegistry);
         REVSuckerDeploymentConfig memory suckerConfig =
             builder.buildSuckerDeploymentConfigMainnet(opDeployer, baseDeployer, arbDeployer);
@@ -631,7 +608,7 @@ contract TestFeeProjectDeployer is Test {
 
     function test_deployForRecordsCorrectConfig() public {
         REVConfig memory config = builder.buildRevnetConfiguration(operatorAddr);
-        JBTerminalConfig[] memory terminalConfigs =
+        JBAccountingContext[] memory terminalConfigs =
             builder.buildTerminalConfigurations(multiTerminal, routerTerminalRegistry);
         REVSuckerDeploymentConfig memory suckerConfig =
             builder.buildSuckerDeploymentConfigMainnet(opDeployer, baseDeployer, arbDeployer);
@@ -642,7 +619,7 @@ contract TestFeeProjectDeployer is Test {
         (
             uint256 revnetId,
             REVConfig memory recordedConfig,
-            JBTerminalConfig[] memory recordedTerminals,
+            JBAccountingContext[] memory recordedContexts,
             REVSuckerDeploymentConfig memory recordedSuckers
         ) = mockDeployer.getRecordedArgs();
 
@@ -657,13 +634,13 @@ contract TestFeeProjectDeployer is Test {
         );
         assertEq(recordedConfig.baseCurrency, ETH_CURRENCY, "Recorded base currency matches");
         assertEq(recordedConfig.operator, operatorAddr, "Recorded operator matches");
-        assertEq(recordedTerminals.length, 2, "Recorded 2 terminals");
+        assertEq(recordedContexts.length, 1, "Recorded 1 accounting context");
         assertEq(recordedSuckers.salt, SUCKER_SALT, "Recorded sucker salt");
     }
 
     function test_deployForRecordsCorrectStageConfig() public {
         REVConfig memory config = builder.buildRevnetConfiguration(operatorAddr);
-        JBTerminalConfig[] memory terminalConfigs =
+        JBAccountingContext[] memory terminalConfigs =
             builder.buildTerminalConfigurations(multiTerminal, routerTerminalRegistry);
         REVSuckerDeploymentConfig memory suckerConfig =
             builder.buildSuckerDeploymentConfigMainnet(opDeployer, baseDeployer, arbDeployer);
@@ -684,34 +661,26 @@ contract TestFeeProjectDeployer is Test {
         assertEq(stage.extraMetadata, 4, "Extra metadata recorded");
     }
 
-    function test_deployForRecordsCorrectTerminals() public {
+    function test_deployForRecordsCorrectAccountingContexts() public {
         REVConfig memory config = builder.buildRevnetConfiguration(operatorAddr);
-        JBTerminalConfig[] memory terminalConfigs =
+        JBAccountingContext[] memory terminalConfigs =
             builder.buildTerminalConfigurations(multiTerminal, routerTerminalRegistry);
         REVSuckerDeploymentConfig memory suckerConfig =
             builder.buildSuckerDeploymentConfigMainnet(opDeployer, baseDeployer, arbDeployer);
 
         mockDeployer.deployFor(FEE_PROJECT_ID, config, terminalConfigs, suckerConfig);
 
-        (,, JBTerminalConfig[] memory recordedTerminals,) = mockDeployer.getRecordedArgs();
+        (,, JBAccountingContext[] memory recordedContexts,) = mockDeployer.getRecordedArgs();
 
-        assertEq(recordedTerminals.length, 2, "2 terminals recorded");
-
-        assertEq(address(recordedTerminals[0].terminal), address(multiTerminal), "First terminal recorded");
-        assertEq(recordedTerminals[0].accountingContextsToAccept.length, 1, "First terminal has 1 accounting context");
-        assertEq(
-            recordedTerminals[0].accountingContextsToAccept[0].token, JBConstants.NATIVE_TOKEN, "Accepts native token"
-        );
-
-        assertEq(address(recordedTerminals[1].terminal), address(routerTerminalRegistry), "Second terminal recorded");
-        assertEq(
-            recordedTerminals[1].accountingContextsToAccept.length, 0, "Second terminal has no accounting contexts"
-        );
+        assertEq(recordedContexts.length, 1, "1 accounting context recorded");
+        assertEq(recordedContexts[0].token, JBConstants.NATIVE_TOKEN, "Accepts native token");
+        assertEq(recordedContexts[0].decimals, 18, "18 decimals");
+        assertEq(recordedContexts[0].currency, NATIVE_CURRENCY, "Native currency");
     }
 
     function test_deployForRecordsCorrectSuckerConfig() public {
         REVConfig memory config = builder.buildRevnetConfiguration(operatorAddr);
-        JBTerminalConfig[] memory terminalConfigs =
+        JBAccountingContext[] memory terminalConfigs =
             builder.buildTerminalConfigurations(multiTerminal, routerTerminalRegistry);
         REVSuckerDeploymentConfig memory suckerConfig =
             builder.buildSuckerDeploymentConfigMainnet(opDeployer, baseDeployer, arbDeployer);
@@ -864,12 +833,12 @@ contract TestFeeProjectDeployer is Test {
 
     /// @notice Verifies that the native token and currency are consistent across the config.
     function test_nativeTokenConsistency() public view {
-        JBTerminalConfig[] memory terminalConfigs =
+        JBAccountingContext[] memory terminalConfigs =
             builder.buildTerminalConfigurations(multiTerminal, routerTerminalRegistry);
         JBTokenMapping[] memory mappings = builder.buildTokenMappings();
 
-        // Terminal accepts native token.
-        assertEq(terminalConfigs[0].accountingContextsToAccept[0].token, JBConstants.NATIVE_TOKEN);
+        // Revnet deploy calldata carries only accepted accounting contexts.
+        assertEq(terminalConfigs[0].token, JBConstants.NATIVE_TOKEN);
 
         // Token mapping maps native token.
         assertEq(mappings[0].localToken, JBConstants.NATIVE_TOKEN);
@@ -893,14 +862,14 @@ contract TestFeeProjectDeployer is Test {
     /// @notice Ensures encoding -> decoding through the mock preserves all nested data.
     function test_fullRoundTripFidelity() public {
         REVConfig memory config = builder.buildRevnetConfiguration(operatorAddr);
-        JBTerminalConfig[] memory terminalConfigs =
+        JBAccountingContext[] memory terminalConfigs =
             builder.buildTerminalConfigurations(multiTerminal, routerTerminalRegistry);
         REVSuckerDeploymentConfig memory suckerConfig =
             builder.buildSuckerDeploymentConfigMainnet(opDeployer, baseDeployer, arbDeployer);
 
         mockDeployer.deployFor(FEE_PROJECT_ID, config, terminalConfigs, suckerConfig);
 
-        (uint256 revnetId, REVConfig memory rc, JBTerminalConfig[] memory rt, REVSuckerDeploymentConfig memory rs) =
+        (uint256 revnetId, REVConfig memory rc, JBAccountingContext[] memory rt, REVSuckerDeploymentConfig memory rs) =
             mockDeployer.getRecordedArgs();
 
         // Top-level.
@@ -930,10 +899,9 @@ contract TestFeeProjectDeployer is Test {
         assertEq(rc.stageConfigurations[0].splits[0].percent, config.stageConfigurations[0].splits[0].percent);
         assertEq(rc.stageConfigurations[0].splits[0].beneficiary, config.stageConfigurations[0].splits[0].beneficiary);
 
-        // Terminals.
-        assertEq(rt.length, 2);
-        assertEq(address(rt[0].terminal), address(multiTerminal));
-        assertEq(rt[0].accountingContextsToAccept[0].token, JBConstants.NATIVE_TOKEN);
+        // Accounting contexts.
+        assertEq(rt.length, 1);
+        assertEq(rt[0].token, JBConstants.NATIVE_TOKEN);
 
         // Suckers: token mappings within each deployer config.
         assertEq(rs.deployerConfigurations.length, 3);

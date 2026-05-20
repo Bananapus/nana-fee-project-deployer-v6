@@ -18,6 +18,7 @@ interface GuardTokens {
 interface GuardRevnetDeployer {
     function FEE_REVNET_ID() external view returns (uint256);
     function hashedEncodedConfigurationOf(uint256 projectId) external view returns (bytes32);
+    function isOperatorOf(uint256 revnetId, address addr) external view returns (bool);
 }
 
 contract MockGuardProjects is GuardProjects {
@@ -59,6 +60,7 @@ contract MockGuardTokens is GuardTokens {
 contract MockGuardRevnetDeployer is GuardRevnetDeployer {
     uint256 internal _feeRevnetId;
     mapping(uint256 projectId => bytes32 hash) internal _hashOf;
+    mapping(uint256 projectId => mapping(address addr => bool isOperator)) internal _isOperatorOf;
 
     function setFeeRevnetId(uint256 feeRevnetId) external {
         _feeRevnetId = feeRevnetId;
@@ -68,12 +70,20 @@ contract MockGuardRevnetDeployer is GuardRevnetDeployer {
         _hashOf[projectId] = hash;
     }
 
+    function setIsOperatorOf(uint256 projectId, address addr, bool isOperator) external {
+        _isOperatorOf[projectId][addr] = isOperator;
+    }
+
     function FEE_REVNET_ID() external view override returns (uint256) {
         return _feeRevnetId;
     }
 
     function hashedEncodedConfigurationOf(uint256 projectId) external view override returns (bytes32) {
         return _hashOf[projectId];
+    }
+
+    function isOperatorOf(uint256 projectId, address addr) external view override returns (bool) {
+        return _isOperatorOf[projectId][addr];
     }
 }
 
@@ -112,15 +122,37 @@ contract FeeProjectCanonicalGuardHarness {
         CONTROLLER = controller;
     }
 
-    function feeProjectIsCanonical(uint256 feeProjectId) external view returns (bool) {
-        return _feeProjectIsCanonical(feeProjectId);
+    function feeProjectIsCanonical(
+        uint256 feeProjectId,
+        bytes32 expectedConfigurationHash,
+        address expectedOperator
+    )
+        external
+        view
+        returns (bool)
+    {
+        return _feeProjectIsCanonical({
+            feeProjectId: feeProjectId,
+            expectedConfigurationHash: expectedConfigurationHash,
+            expectedOperator: expectedOperator
+        });
     }
 
     /// @dev Mirrors `Deploy.s.sol` so the regression pins the current standalone skip guard.
-    function _feeProjectIsCanonical(uint256 feeProjectId) internal view returns (bool) {
+    function _feeProjectIsCanonical(
+        uint256 feeProjectId,
+        bytes32 expectedConfigurationHash,
+        address expectedOperator
+    )
+        internal
+        view
+        returns (bool)
+    {
         if (PROJECTS.ownerOf(feeProjectId) != address(REVNET_DEPLOYER)) return false;
         if (DIRECTORY.controllerOf(feeProjectId) != CONTROLLER) return false;
-        if (REVNET_DEPLOYER.hashedEncodedConfigurationOf(feeProjectId) == bytes32(0)) return false;
+        if (REVNET_DEPLOYER.FEE_REVNET_ID() != feeProjectId) return false;
+        if (REVNET_DEPLOYER.hashedEncodedConfigurationOf(feeProjectId) != expectedConfigurationHash) return false;
+        if (!REVNET_DEPLOYER.isOperatorOf({revnetId: feeProjectId, addr: expectedOperator})) return false;
         if (!_projectTokenSymbolIs({projectId: feeProjectId, expectedSymbol: SYMBOL})) return false;
         return true;
     }
@@ -138,6 +170,7 @@ contract FeeProjectCanonicalGuardHarness {
 
 contract RegressionCanonicalGuardTest is Test {
     uint256 internal constant FEE_PROJECT_ID = 1;
+    bytes32 internal constant EXPECTED_HASH = keccak256("expected fee project config");
 
     MockGuardProjects internal projects;
     MockGuardDirectory internal directory;
@@ -146,6 +179,7 @@ contract RegressionCanonicalGuardTest is Test {
     FeeProjectCanonicalGuardHarness internal guard;
 
     address internal controller = makeAddr("controller");
+    address internal operator = makeAddr("operator");
 
     function setUp() public {
         projects = new MockGuardProjects();
@@ -159,25 +193,62 @@ contract RegressionCanonicalGuardTest is Test {
         projects.setOwnerOf(FEE_PROJECT_ID, address(deployer));
         directory.setControllerOf(FEE_PROJECT_ID, controller);
         tokens.setTokenOf(FEE_PROJECT_ID, address(new MockSymbolToken("NANA")));
+        deployer.setFeeRevnetId(FEE_PROJECT_ID);
+        deployer.setHashOf(FEE_PROJECT_ID, EXPECTED_HASH);
+        deployer.setIsOperatorOf(FEE_PROJECT_ID, operator, true);
     }
 
-    function test_guardAcceptsArbitraryNonzeroConfigHashAndWrongFeeRevnetDependency() public {
-        deployer.setHashOf(FEE_PROJECT_ID, keccak256("wrong fee project config"));
-        deployer.setFeeRevnetId(999);
-
+    function test_guardAcceptsExpectedCanonicalSurfaces() public view {
         assertTrue(
-            guard.feeProjectIsCanonical(FEE_PROJECT_ID),
-            "standalone guard accepts nonzero hash and ignores FEE_REVNET_ID"
+            guard.feeProjectIsCanonical({
+                feeProjectId: FEE_PROJECT_ID, expectedConfigurationHash: EXPECTED_HASH, expectedOperator: operator
+            }),
+            "baseline guard should pass"
         );
     }
 
-    function test_guardRejectsOnlyTheCurrentlyCheckedSurfaces() public {
+    function test_guardRejectsArbitraryNonzeroConfigHashAndWrongFeeRevnetDependency() public {
+        deployer.setHashOf(FEE_PROJECT_ID, keccak256("wrong fee project config"));
+        deployer.setFeeRevnetId(999);
+
+        assertFalse(
+            guard.feeProjectIsCanonical({
+                feeProjectId: FEE_PROJECT_ID, expectedConfigurationHash: EXPECTED_HASH, expectedOperator: operator
+            }),
+            "standalone guard must reject wrong hash and fee dependency"
+        );
+    }
+
+    function test_guardRejectsWrongHashEvenWhenOtherSurfacesMatch() public {
         deployer.setHashOf(FEE_PROJECT_ID, keccak256("wrong fee project config"));
 
-        assertTrue(guard.feeProjectIsCanonical(FEE_PROJECT_ID), "baseline guard should pass");
+        assertFalse(
+            guard.feeProjectIsCanonical({
+                feeProjectId: FEE_PROJECT_ID, expectedConfigurationHash: EXPECTED_HASH, expectedOperator: operator
+            }),
+            "wrong config hash is not canonical"
+        );
+    }
 
+    function test_guardRejectsMissingExpectedOperator() public {
+        deployer.setIsOperatorOf(FEE_PROJECT_ID, operator, false);
+
+        assertFalse(
+            guard.feeProjectIsCanonical({
+                feeProjectId: FEE_PROJECT_ID, expectedConfigurationHash: EXPECTED_HASH, expectedOperator: operator
+            }),
+            "wrong operator surface is not canonical"
+        );
+    }
+
+    function test_guardRejectsSymbolMismatch() public {
         tokens.setTokenOf(FEE_PROJECT_ID, address(new MockSymbolToken("FAKE")));
 
-        assertFalse(guard.feeProjectIsCanonical(FEE_PROJECT_ID), "symbol mismatch is checked");
+        assertFalse(
+            guard.feeProjectIsCanonical({
+                feeProjectId: FEE_PROJECT_ID, expectedConfigurationHash: EXPECTED_HASH, expectedOperator: operator
+            }),
+            "symbol mismatch is checked"
+        );
     }
 }
