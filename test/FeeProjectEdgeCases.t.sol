@@ -275,7 +275,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             TRUSTED_FORWARDER
         );
         buybackHook.setChainSpecificConstants({
-            poolManager: IPoolManager(POOL_MANAGER_ADDR), oracleHook: IHooks(address(0))
+            newPoolManager: IPoolManager(POOL_MANAGER_ADDR), newOracleHook: IHooks(address(0))
         });
 
         JBBuybackHookRegistry registry = new JBBuybackHookRegistry(
@@ -289,6 +289,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
 
         loansContract = new REVLoans({
             controller: jbController,
+            multiTerminal: jbMultiTerminal,
             suckerRegistry: suckerRegistry,
             revId: FEE_PROJECT_ID,
             owner: address(this),
