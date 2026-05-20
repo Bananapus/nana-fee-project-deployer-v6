@@ -14,8 +14,9 @@ import {
 
 import {JBConstants} from "@bananapus/core-v6/src/libraries/JBConstants.sol";
 import {JBCurrencyIds} from "@bananapus/core-v6/src/libraries/JBCurrencyIds.sol";
+import {JBSplitGroupIds} from "@bananapus/core-v6/src/libraries/JBSplitGroupIds.sol";
 import {JBAccountingContext} from "@bananapus/core-v6/src/structs/JBAccountingContext.sol";
-import {JBTerminalConfig} from "@bananapus/core-v6/src/structs/JBTerminalConfig.sol";
+import {JBRuleset} from "@bananapus/core-v6/src/structs/JBRuleset.sol";
 import {JBSuckerDeployerConfig} from "@bananapus/suckers-v6/src/structs/JBSuckerDeployerConfig.sol";
 import {JBTokenMapping} from "@bananapus/suckers-v6/src/structs/JBTokenMapping.sol";
 import {REVAutoIssuance} from "@rev-net/core-v6/src/structs/REVAutoIssuance.sol";
@@ -104,19 +105,6 @@ contract DeployScript is Script, Sphinx {
         // Accept the chain's native currency through the multi terminal.
         accountingContextsToAccept[0] =
             JBAccountingContext({token: JBConstants.NATIVE_TOKEN, decimals: 18, currency: NATIVE_CURRENCY});
-
-        // The terminals that the project will accept funds through.
-        // NOTE: Terminal selection is set via terminalConfigurations in deployFor but is not locked in the directory.
-        // If the directory owner or a permissioned operator later changes the fee project's terminals, payments could
-        // be silently redirected. Post-deployment, the fee project operator should lock terminals via the directory
-        // if this risk is unacceptable.
-        JBTerminalConfig[] memory terminalConfigurations = new JBTerminalConfig[](2);
-        terminalConfigurations[0] =
-            JBTerminalConfig({terminal: core.terminal, accountingContextsToAccept: accountingContextsToAccept});
-        terminalConfigurations[1] = JBTerminalConfig({
-            terminal: IJBTerminal(address(routerTerminal.registry)),
-            accountingContextsToAccept: new JBAccountingContext[](0)
-        });
 
         JBSplit[] memory splits = new JBSplit[](1);
         splits[0] = JBSplit({
@@ -212,30 +200,147 @@ contract DeployScript is Script, Sphinx {
         REVSuckerDeploymentConfig memory suckerDeploymentConfiguration =
             REVSuckerDeploymentConfig({deployerConfigurations: suckerDeployerConfigurations, salt: SUCKER_SALT});
 
+        bytes32 expectedConfigurationHash = _encodedConfigurationHashOf({configuration: revnetConfiguration});
+
         // Skip deployment only if the fee project is already the canonical NANA revnet.
         if (address(core.controller.DIRECTORY().controllerOf(feeProjectId)) != address(0)) {
-            if (!_feeProjectIsCanonical(feeProjectId)) revert DeployScript_FeeProjectNotCanonical(feeProjectId);
+            if (!_feeProjectIsCanonical({
+                    feeProjectId: feeProjectId,
+                    expectedConfigurationHash: expectedConfigurationHash,
+                    expectedOperator: operator
+                })) revert DeployScript_FeeProjectNotCanonical(feeProjectId);
             return;
         }
 
         // Approve the basic deployer to configure the project.
-        core.projects.approve({to: address(revnet.basic_deployer), tokenId: feeProjectId});
+        core.projects.approve({to: address(revnet.basicDeployer), tokenId: feeProjectId});
 
         // Deploy the NANA fee project.
-        revnet.basic_deployer
+        revnet.basicDeployer
             .deployFor({
                 revnetId: feeProjectId,
                 configuration: revnetConfiguration,
-                terminalConfigurations: terminalConfigurations,
+                accountingContextsToAccept: accountingContextsToAccept,
                 suckerDeploymentConfiguration: suckerDeploymentConfiguration
             });
     }
 
-    function _feeProjectIsCanonical(uint256 feeProjectId) internal view returns (bool) {
-        if (core.projects.ownerOf(feeProjectId) != address(revnet.basic_deployer)) return false;
+    function _feeProjectIsCanonical(
+        uint256 feeProjectId,
+        bytes32 expectedConfigurationHash,
+        address expectedOperator
+    )
+        internal
+        view
+        returns (bool)
+    {
+        if (core.projects.ownerOf(feeProjectId) != address(revnet.basicDeployer)) return false;
         if (address(core.controller.DIRECTORY().controllerOf(feeProjectId)) != address(core.controller)) return false;
-        if (revnet.basic_deployer.hashedEncodedConfigurationOf(feeProjectId) == bytes32(0)) return false;
+        if (revnet.basicDeployer.FEE_REVNET_ID() != feeProjectId) return false;
+        if (revnet.basicDeployer.hashedEncodedConfigurationOf(feeProjectId) != expectedConfigurationHash) {
+            return false;
+        }
+        if (!revnet.basicDeployer.isOperatorOf({revnetId: feeProjectId, addr: expectedOperator})) return false;
         if (!_projectTokenSymbolIs({projectId: feeProjectId, expectedSymbol: SYMBOL})) return false;
+        if (keccak256(bytes(core.controller.uriOf(feeProjectId))) != keccak256(bytes(PROJECT_URI))) return false;
+        if (!_reservedSplitIsCanonical({projectId: feeProjectId, expectedBeneficiary: payable(expectedOperator)})) {
+            return false;
+        }
+        if (!_nativeTerminalConfigIsCanonical(feeProjectId)) return false;
+        return true;
+    }
+
+    function _encodedConfigurationHashOf(REVConfig memory configuration) internal view returns (bytes32) {
+        bytes memory encodedConfiguration = abi.encode(
+            configuration.baseCurrency,
+            configuration.scopeCashOutsToLocalBalances,
+            configuration.description.name,
+            configuration.description.ticker,
+            configuration.description.salt
+        );
+
+        encodedConfiguration = abi.encode(encodedConfiguration, core.terminal, routerTerminal.registry);
+
+        uint256 previousStageStart;
+        for (uint256 i; i < configuration.stageConfigurations.length;) {
+            REVStageConfig memory stageConfiguration = configuration.stageConfigurations[i];
+            uint256 effectiveStart = (i == 0 && stageConfiguration.startsAtOrAfter == 0)
+                ? block.timestamp
+                : stageConfiguration.startsAtOrAfter;
+
+            if (i > 0 && effectiveStart <= previousStageStart) return bytes32(0);
+            previousStageStart = effectiveStart;
+
+            encodedConfiguration = abi.encode(
+                encodedConfiguration,
+                effectiveStart,
+                stageConfiguration.splitPercent,
+                stageConfiguration.initialIssuance,
+                stageConfiguration.issuanceCutFrequency,
+                stageConfiguration.issuanceCutPercent,
+                stageConfiguration.cashOutTaxRate,
+                stageConfiguration.extraMetadata
+            );
+
+            for (uint256 j; j < stageConfiguration.autoIssuances.length;) {
+                REVAutoIssuance memory autoIssuance = stageConfiguration.autoIssuances[j];
+                if (autoIssuance.count != 0) {
+                    encodedConfiguration = abi.encode(
+                        encodedConfiguration, autoIssuance.chainId, autoIssuance.beneficiary, autoIssuance.count
+                    );
+                }
+                unchecked {
+                    ++j;
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
+        return keccak256(encodedConfiguration);
+    }
+
+    function _reservedSplitIsCanonical(
+        uint256 projectId,
+        address payable expectedBeneficiary
+    )
+        internal
+        view
+        returns (bool)
+    {
+        (JBRuleset memory ruleset,) = core.controller.currentRulesetOf(projectId);
+        JBSplit[] memory reservedSplits =
+            core.controller.SPLITS().splitsOf(projectId, ruleset.id, JBSplitGroupIds.RESERVED_TOKENS);
+
+        if (reservedSplits.length != 1) return false;
+
+        JBSplit memory split = reservedSplits[0];
+        if (split.percent != JBConstants.SPLITS_TOTAL_PERCENT) return false;
+        if (split.projectId != 0) return false;
+        if (split.beneficiary != expectedBeneficiary) return false;
+        if (split.preferAddToBalance) return false;
+        if (split.lockedUntil != 0) return false;
+        if (address(split.hook) != address(0)) return false;
+
+        return true;
+    }
+
+    function _nativeTerminalConfigIsCanonical(uint256 projectId) internal view returns (bool) {
+        if (core.controller.DIRECTORY().primaryTerminalOf(projectId, JBConstants.NATIVE_TOKEN) != core.terminal) {
+            return false;
+        }
+        if (!core.controller.DIRECTORY().isTerminalOf(projectId, IJBTerminal(address(routerTerminal.registry)))) {
+            return false;
+        }
+
+        JBAccountingContext memory accountingContext =
+            core.terminal.accountingContextForTokenOf({projectId: projectId, token: JBConstants.NATIVE_TOKEN});
+
+        if (accountingContext.token != JBConstants.NATIVE_TOKEN) return false;
+        if (accountingContext.decimals != DECIMALS) return false;
+        if (accountingContext.currency != NATIVE_CURRENCY) return false;
+
         return true;
     }
 

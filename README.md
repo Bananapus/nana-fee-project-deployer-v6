@@ -51,6 +51,7 @@ This repo owns one thing: the exact deployment shape of the protocol fee recipie
 
 - this repo is mostly packaging, so many runtime assumptions live in sibling repos it composes
 - fee-project deployment order matters because other packages may assume project `#1` already exists
+- replay/idempotence checks must only skip when an existing project `#1` matches the exact NANA fee-project shape
 - all chains in a deployment set must write matching auto-issuance entries so the resulting ruleset hash stays aligned
 - terminal selection is configured during deployment but not directory-locked here
 - misconfigured stages or auto-issuance settings can be operationally wrong even if they compile and deploy cleanly

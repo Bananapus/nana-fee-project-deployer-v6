@@ -297,6 +297,8 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         // ── Deploy REVDeployer ──
         revDeployer = new REVDeployer{salt: "REVDeployer_Fork"}(
             jbController,
+            jbMultiTerminal,
+            jbMultiTerminal,
             suckerRegistry,
             FEE_PROJECT_ID,
             hookDeployer,
@@ -327,7 +329,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         view
         returns (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         )
     {
@@ -336,10 +338,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         accountingContexts[0] =
             JBAccountingContext({token: JBConstants.NATIVE_TOKEN, decimals: 18, currency: NATIVE_CURRENCY});
 
-        terminalConfigs = new JBTerminalConfig[](1);
-        terminalConfigs[0] = JBTerminalConfig({
-            terminal: IJBTerminal(address(jbMultiTerminal)), accountingContextsToAccept: accountingContexts
-        });
+        terminalConfigs = accountingContexts;
 
         // Reserved splits: 100% of reserved tokens go to OPERATOR.
         JBSplit[] memory splits = new JBSplit[](1);
@@ -392,7 +391,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
     function testFork_FeeProjectDeploySucceeds() public {
         (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         ) = _buildFeeProjectConfig();
 
@@ -401,7 +400,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         (uint256 deployedId,) = revDeployer.deployFor({
             revnetId: FEE_PROJECT_ID,
             configuration: config,
-            terminalConfigurations: terminalConfigs,
+            accountingContextsToAccept: terminalConfigs,
             suckerDeploymentConfiguration: suckerConfig
         });
 
@@ -429,7 +428,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         // Deploy the fee project.
         (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         ) = _buildFeeProjectConfig();
 
@@ -437,7 +436,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         revDeployer.deployFor({
             revnetId: FEE_PROJECT_ID,
             configuration: config,
-            terminalConfigurations: terminalConfigs,
+            accountingContextsToAccept: terminalConfigs,
             suckerDeploymentConfiguration: suckerConfig
         });
 
@@ -477,7 +476,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         // Deploy the fee project.
         (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         ) = _buildFeeProjectConfig();
 
@@ -485,7 +484,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         revDeployer.deployFor({
             revnetId: FEE_PROJECT_ID,
             configuration: config,
-            terminalConfigurations: terminalConfigs,
+            accountingContextsToAccept: terminalConfigs,
             suckerDeploymentConfiguration: suckerConfig
         });
 
@@ -531,7 +530,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         // Deploy the fee project.
         (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         ) = _buildFeeProjectConfig();
 
@@ -539,7 +538,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         revDeployer.deployFor({
             revnetId: FEE_PROJECT_ID,
             configuration: config,
-            terminalConfigurations: terminalConfigs,
+            accountingContextsToAccept: terminalConfigs,
             suckerDeploymentConfiguration: suckerConfig
         });
 

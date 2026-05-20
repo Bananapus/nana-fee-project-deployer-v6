@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+import {JBAccountingContext} from "@bananapus/core-v6/src/structs/JBAccountingContext.sol";
+
 import {Test} from "forge-std/Test.sol";
 
 import {REVConfig} from "@rev-net/core-v6/src/structs/REVConfig.sol";
@@ -63,7 +65,7 @@ contract RegressionReplayNotIdempotentTest is FeeProjectEdgeCases {
 
         (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         ) = _buildFeeProjectConfig();
 
@@ -72,7 +74,7 @@ contract RegressionReplayNotIdempotentTest is FeeProjectEdgeCases {
         revDeployer.deployFor({
             revnetId: FEE_PROJECT_ID,
             configuration: config,
-            terminalConfigurations: terminalConfigs,
+            accountingContextsToAccept: terminalConfigs,
             suckerDeploymentConfiguration: suckerConfig
         });
     }

@@ -27,10 +27,7 @@ contract LateStartTimeRegressionTest is FeeProjectEdgeCases {
         accountingContexts[0] =
             JBAccountingContext({token: JBConstants.NATIVE_TOKEN, decimals: 18, currency: NATIVE_CURRENCY});
 
-        JBTerminalConfig[] memory terminalConfigs = new JBTerminalConfig[](1);
-        terminalConfigs[0] = JBTerminalConfig({
-            terminal: IJBTerminal(address(jbMultiTerminal)), accountingContextsToAccept: accountingContexts
-        });
+        JBAccountingContext[] memory terminalConfigs = accountingContexts;
 
         JBSplit[] memory splits = new JBSplit[](1);
         splits[0] = JBSplit({
@@ -74,7 +71,7 @@ contract LateStartTimeRegressionTest is FeeProjectEdgeCases {
         revDeployer.deployFor({
             revnetId: FEE_PROJECT_ID,
             configuration: config,
-            terminalConfigurations: terminalConfigs,
+            accountingContextsToAccept: terminalConfigs,
             suckerDeploymentConfiguration: suckerConfig
         });
 
