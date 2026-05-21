@@ -251,4 +251,91 @@ contract RegressionCanonicalGuardTest is Test {
             "symbol mismatch is checked"
         );
     }
+
+    function test_scriptGuardIncludesCurrentCanonicalSurfaces() public view {
+        string memory deploySource = vm.readFile("script/Deploy.s.sol");
+        string memory guardSource = _section({
+            haystack: deploySource,
+            startNeedle: "function _feeProjectIsCanonical(",
+            endNeedle: "function _encodedConfigurationHashOf("
+        });
+        string memory hashSource = _section({
+            haystack: deploySource,
+            startNeedle: "function _encodedConfigurationHashOf(",
+            endNeedle: "function _reservedSplitIsCanonical("
+        });
+
+        assertTrue(_contains(guardSource, "FEE_REVNET_ID()"), "guard checks fee-revnet dependency");
+        assertTrue(
+            _contains(guardSource, "hashedEncodedConfigurationOf(feeProjectId) != expectedConfigurationHash"),
+            "guard checks exact configuration hash"
+        );
+        assertTrue(_contains(guardSource, "isOperatorOf"), "guard checks expected operator");
+        assertTrue(_contains(guardSource, "uriOf(feeProjectId)"), "guard checks project URI");
+        assertTrue(_contains(guardSource, "_reservedSplitIsCanonical"), "guard checks reserved split routing");
+        assertTrue(_contains(guardSource, "_nativeTerminalConfigIsCanonical"), "guard checks terminal setup");
+        assertTrue(_contains(hashSource, "core.terminal"), "hash includes canonical multi terminal");
+        assertTrue(_contains(hashSource, "routerTerminal.registry"), "hash includes canonical router terminal");
+    }
+
+    function _contains(string memory haystack, string memory needle) internal pure returns (bool) {
+        bytes memory h = bytes(haystack);
+        bytes memory n = bytes(needle);
+        if (n.length == 0) return true;
+        if (n.length > h.length) return false;
+
+        for (uint256 i; i <= h.length - n.length; i++) {
+            bool matched = true;
+            for (uint256 j; j < n.length; j++) {
+                if (h[i + j] != n[j]) {
+                    matched = false;
+                    break;
+                }
+            }
+            if (matched) return true;
+        }
+
+        return false;
+    }
+
+    function _indexOfFrom(string memory haystack, string memory needle, uint256 start) internal pure returns (uint256) {
+        bytes memory h = bytes(haystack);
+        bytes memory n = bytes(needle);
+        require(n.length != 0, "empty needle");
+        require(n.length <= h.length, "needle too long");
+
+        for (uint256 i = start; i <= h.length - n.length; i++) {
+            bool matched = true;
+            for (uint256 j; j < n.length; j++) {
+                if (h[i + j] != n[j]) {
+                    matched = false;
+                    break;
+                }
+            }
+            if (matched) return i;
+        }
+
+        revert("needle not found");
+    }
+
+    function _section(
+        string memory haystack,
+        string memory startNeedle,
+        string memory endNeedle
+    )
+        internal
+        pure
+        returns (string memory)
+    {
+        bytes memory h = bytes(haystack);
+        uint256 start = _indexOfFrom(haystack, startNeedle, 0);
+        uint256 end = _indexOfFrom(haystack, endNeedle, start);
+        require(end >= start, "invalid section");
+
+        bytes memory out = new bytes(end - start);
+        for (uint256 i; i < out.length; i++) {
+            out[i] = h[start + i];
+        }
+        return string(out);
+    }
 }
