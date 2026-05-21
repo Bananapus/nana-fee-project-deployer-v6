@@ -26,6 +26,8 @@ This file covers the risks around project `#1`, the protocol fee sink.
 ## 2. Configuration Risks
 
 - **Hardcoded parameters are permanent once deployed.**
+- **Idempotence must be exact.** A pre-existing project `#1` should be accepted only if it matches the expected NANA
+  configuration hash, fee-revnet dependency, operator, URI, reserved split, and native terminal setup.
 - **Auto-issuance amounts matter.**
 - **Start time can already be in the past at deployment.**
 - **L2 sucker deployer selection can go wrong.**
@@ -53,10 +55,10 @@ This is the fee project. Maximum scrutiny on deployment parameters is warranted.
 ## 6. Invariants To Verify
 
 - project `#1` is owned by the intended deployer surface
+- replaying the deploy script rejects wrong-but-plausible existing project `#1` configurations
 - stage parameters match the intended configuration
 - sucker pairs connect the correct chains
 - auto-issuance amounts match the intended per-chain distribution
 - operator address is the intended multisig
 - shared economic parameters match `deploy-all-v6` where expected
 - the fee project's primary terminal accepts the intended native asset on every deployed chain
-

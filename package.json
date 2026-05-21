@@ -32,17 +32,17 @@
     "deploy:testnets": "source ./.env && export START_TIME=$(date +%s) && npx sphinx propose ./script/Deploy.s.sol --networks testnets"
   },
   "dependencies": {
-    "@bananapus/core-v6": "^0.0.54",
-    "@bananapus/permission-ids-v6": "^0.0.25",
-    "@bananapus/router-terminal-v6": "^0.0.44",
-    "@bananapus/suckers-v6": "^0.0.47",
-    "@rev-net/core-v6": "^0.0.57"
+    "@bananapus/core-v6": "^0.0.57",
+    "@bananapus/permission-ids-v6": "^0.0.26",
+    "@bananapus/router-terminal-v6": "^0.0.46",
+    "@bananapus/suckers-v6": "^0.0.49",
+    "@rev-net/core-v6": "^0.0.61"
   },
   "devDependencies": {
-    "@bananapus/721-hook-v6": "^0.0.51",
-    "@bananapus/address-registry-v6": "^0.0.25",
-    "@bananapus/buyback-hook-v6": "^0.0.47",
-    "@croptop/core-v6": "^0.0.48",
+    "@bananapus/721-hook-v6": "^0.0.54",
+    "@bananapus/address-registry-v6": "^0.0.26",
+    "@bananapus/buyback-hook-v6": "^0.0.49",
+    "@croptop/core-v6": "^0.0.52",
     "@sphinx-labs/plugins": "0.33.3",
     "@uniswap/permit2": "github:Uniswap/permit2#cc56ad0f3439c502c246fc5cfcc3db92bb8b7219",
     "@uniswap/v4-core": "1.0.2"

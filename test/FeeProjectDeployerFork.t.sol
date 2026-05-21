@@ -76,6 +76,8 @@ import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 import {IPermit2} from "@uniswap/permit2/src/interfaces/IPermit2.sol";
 import {DeployPermit2} from "@uniswap/permit2/test/utils/DeployPermit2.sol";
 
+import {MockRouterTerminalRegistry} from "./mock/MockRouterTerminalRegistry.sol";
+
 /// @notice Identity price feed returning 1:1 for same-asset currency pairs.
 contract MockPriceFeed is IJBPriceFeed {
     function currentUnitPrice(uint256 decimals) external pure override returns (uint256) {
@@ -146,6 +148,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
     JBController jbController;
     JBTerminalStore jbTerminalStore;
     JBMultiTerminal jbMultiTerminal;
+    IJBTerminal jbRouterTerminalRegistry;
     IPermit2 permit2Instance;
 
     // Revnet
@@ -211,6 +214,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
             permit2Instance,
             TRUSTED_FORWARDER
         );
+        jbRouterTerminalRegistry = IJBTerminal(address(new MockRouterTerminalRegistry()));
 
         // ── Place minimal bytecode at address(0) and mock its observe call so the
         // buyback hook's TWAP oracle lookup (key.hooks = address(0) when no pool
@@ -269,7 +273,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
             TRUSTED_FORWARDER
         );
         buybackHook.setChainSpecificConstants({
-            poolManager: IPoolManager(POOL_MANAGER_ADDR), oracleHook: IHooks(address(0))
+            newPoolManager: IPoolManager(POOL_MANAGER_ADDR), newOracleHook: IHooks(address(0))
         });
 
         JBBuybackHookRegistry registry = new JBBuybackHookRegistry(
@@ -283,6 +287,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
 
         loansContract = new REVLoans({
             controller: jbController,
+            terminal: jbMultiTerminal,
             suckerRegistry: suckerRegistry,
             revId: FEE_PROJECT_ID,
             owner: address(this),
@@ -297,6 +302,8 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         // ── Deploy REVDeployer ──
         revDeployer = new REVDeployer{salt: "REVDeployer_Fork"}(
             jbController,
+            jbMultiTerminal,
+            jbRouterTerminalRegistry,
             suckerRegistry,
             FEE_PROJECT_ID,
             hookDeployer,
@@ -327,7 +334,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         view
         returns (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         )
     {
@@ -336,10 +343,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         accountingContexts[0] =
             JBAccountingContext({token: JBConstants.NATIVE_TOKEN, decimals: 18, currency: NATIVE_CURRENCY});
 
-        terminalConfigs = new JBTerminalConfig[](1);
-        terminalConfigs[0] = JBTerminalConfig({
-            terminal: IJBTerminal(address(jbMultiTerminal)), accountingContextsToAccept: accountingContexts
-        });
+        terminalConfigs = accountingContexts;
 
         // Reserved splits: 100% of reserved tokens go to OPERATOR.
         JBSplit[] memory splits = new JBSplit[](1);
@@ -392,7 +396,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
     function testFork_FeeProjectDeploySucceeds() public {
         (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         ) = _buildFeeProjectConfig();
 
@@ -401,7 +405,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         (uint256 deployedId,) = revDeployer.deployFor({
             revnetId: FEE_PROJECT_ID,
             configuration: config,
-            terminalConfigurations: terminalConfigs,
+            accountingContextsToAccept: terminalConfigs,
             suckerDeploymentConfiguration: suckerConfig
         });
 
@@ -429,7 +433,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         // Deploy the fee project.
         (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         ) = _buildFeeProjectConfig();
 
@@ -437,7 +441,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         revDeployer.deployFor({
             revnetId: FEE_PROJECT_ID,
             configuration: config,
-            terminalConfigurations: terminalConfigs,
+            accountingContextsToAccept: terminalConfigs,
             suckerDeploymentConfiguration: suckerConfig
         });
 
@@ -477,7 +481,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         // Deploy the fee project.
         (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         ) = _buildFeeProjectConfig();
 
@@ -485,7 +489,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         revDeployer.deployFor({
             revnetId: FEE_PROJECT_ID,
             configuration: config,
-            terminalConfigurations: terminalConfigs,
+            accountingContextsToAccept: terminalConfigs,
             suckerDeploymentConfiguration: suckerConfig
         });
 
@@ -531,7 +535,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         // Deploy the fee project.
         (
             REVConfig memory config,
-            JBTerminalConfig[] memory terminalConfigs,
+            JBAccountingContext[] memory terminalConfigs,
             REVSuckerDeploymentConfig memory suckerConfig
         ) = _buildFeeProjectConfig();
 
@@ -539,7 +543,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         revDeployer.deployFor({
             revnetId: FEE_PROJECT_ID,
             configuration: config,
-            terminalConfigurations: terminalConfigs,
+            accountingContextsToAccept: terminalConfigs,
             suckerDeploymentConfiguration: suckerConfig
         });
 
