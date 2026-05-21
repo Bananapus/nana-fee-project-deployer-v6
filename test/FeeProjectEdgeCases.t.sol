@@ -74,6 +74,8 @@ import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 import {IPermit2} from "@uniswap/permit2/src/interfaces/IPermit2.sol";
 import {DeployPermit2} from "@uniswap/permit2/test/utils/DeployPermit2.sol";
 
+import {MockRouterTerminalRegistry} from "./mock/MockRouterTerminalRegistry.sol";
+
 /// @notice Identity price feed returning 1:1 for same-asset currency pairs.
 contract IdentityPriceFeed is IJBPriceFeed {
     function currentUnitPrice(uint256 decimals) external pure override returns (uint256) {
@@ -151,6 +153,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
     JBController jbController;
     JBTerminalStore jbTerminalStore;
     JBMultiTerminal jbMultiTerminal;
+    IJBTerminal jbRouterTerminalRegistry;
     IPermit2 permit2Instance;
 
     // Revnet
@@ -220,6 +223,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             permit2Instance,
             TRUSTED_FORWARDER
         );
+        jbRouterTerminalRegistry = IJBTerminal(address(new MockRouterTerminalRegistry()));
 
         // ── Place minimal bytecode at address(0) and mock its observe call so the
         // buyback hook's TWAP oracle lookup (key.hooks = address(0) when no pool
@@ -289,7 +293,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
 
         loansContract = new REVLoans({
             controller: jbController,
-            multiTerminal: jbMultiTerminal,
+            terminal: jbMultiTerminal,
             suckerRegistry: suckerRegistry,
             revId: FEE_PROJECT_ID,
             owner: address(this),
@@ -305,7 +309,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         revDeployer = new REVDeployer{salt: "REVDeployer_Edge"}(
             jbController,
             jbMultiTerminal,
-            jbMultiTerminal,
+            jbRouterTerminalRegistry,
             suckerRegistry,
             FEE_PROJECT_ID,
             hookDeployer,
