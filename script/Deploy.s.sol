@@ -259,8 +259,6 @@ contract DeployScript is Script, Sphinx {
             configuration.description.salt
         );
 
-        encodedConfiguration = abi.encode(encodedConfiguration, core.terminal, routerTerminal.registry);
-
         uint256 previousStageStart;
         for (uint256 i; i < configuration.stageConfigurations.length;) {
             REVStageConfig memory stageConfiguration = configuration.stageConfigurations[i];
