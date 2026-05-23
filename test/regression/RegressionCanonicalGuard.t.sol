@@ -274,8 +274,8 @@ contract RegressionCanonicalGuardTest is Test {
         assertTrue(_contains(guardSource, "uriOf(feeProjectId)"), "guard checks project URI");
         assertTrue(_contains(guardSource, "_reservedSplitIsCanonical"), "guard checks reserved split routing");
         assertTrue(_contains(guardSource, "_nativeTerminalConfigIsCanonical"), "guard checks terminal setup");
-        assertTrue(_contains(hashSource, "core.terminal"), "hash includes canonical multi terminal");
-        assertTrue(_contains(hashSource, "routerTerminal.registry"), "hash includes canonical router terminal");
+        assertFalse(_contains(hashSource, "core.terminal"), "hash excludes canonical multi terminal");
+        assertFalse(_contains(hashSource, "routerTerminal.registry"), "hash excludes canonical router terminal");
     }
 
     function _contains(string memory haystack, string memory needle) internal pure returns (bool) {
