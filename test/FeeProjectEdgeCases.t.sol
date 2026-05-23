@@ -513,7 +513,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             tokenToReclaim: JBConstants.NATIVE_TOKEN,
             minTokensReclaimed: 0,
             beneficiary: payable(PAYER),
-            metadata: ""
+            metadata: "",
+            referralProjectId: 0
         });
 
         // The cashout should complete without reverting (no infinite loop).
@@ -604,7 +605,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             tokenToReclaim: JBConstants.NATIVE_TOKEN,
             minTokensReclaimed: 0,
             beneficiary: payable(PAYER),
-            metadata: ""
+            metadata: "",
+            referralProjectId: 0
         });
 
         vm.prank(PAYER2);
@@ -615,7 +617,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             tokenToReclaim: JBConstants.NATIVE_TOKEN,
             minTokensReclaimed: 0,
             beneficiary: payable(PAYER2),
-            metadata: ""
+            metadata: "",
+            referralProjectId: 0
         });
 
         vm.prank(PAYER3);
@@ -626,7 +629,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             tokenToReclaim: JBConstants.NATIVE_TOKEN,
             minTokensReclaimed: 0,
             beneficiary: payable(PAYER3),
-            metadata: ""
+            metadata: "",
+            referralProjectId: 0
         });
 
         assertTrue(reclaimA > 0 && reclaimB > 0 && reclaimC > 0, "All cashouts should reclaim some ETH");
@@ -754,7 +758,8 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             tokenToReclaim: JBConstants.NATIVE_TOKEN,
             minTokensReclaimed: 0,
             beneficiary: payable(PAYER),
-            metadata: ""
+            metadata: "",
+            referralProjectId: 0
         });
 
         assertTrue(reclaimAmount > 0, "Cashout should still succeed even when fee processing fails");
