@@ -1,6 +1,6 @@
 {
   "name": "@bananapus/fee-project-deployer-v6",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -13,8 +13,7 @@
     "foundry.toml",
     "references/",
     "remappings.txt",
-    "script/Deploy.s.sol",
-    "sphinx.lock"
+    "script/"
   ],
   "scripts": {
     "test": "forge test",
