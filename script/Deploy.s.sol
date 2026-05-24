@@ -240,7 +240,7 @@ contract DeployScript is Script, Sphinx {
         if (revnet.basicDeployer.hashedEncodedConfigurationOf(feeProjectId) != expectedConfigurationHash) {
             return false;
         }
-        if (!revnet.basicDeployer.isOperatorOf({revnetId: feeProjectId, addr: expectedOperator})) return false;
+        if (!revnet.owner.isOperatorOf({revnetId: feeProjectId, addr: expectedOperator})) return false;
         if (!_projectTokenSymbolIs({projectId: feeProjectId, expectedSymbol: SYMBOL})) return false;
         if (keccak256(bytes(core.controller.uriOf(feeProjectId))) != keccak256(bytes(PROJECT_URI))) return false;
         if (!_reservedSplitIsCanonical({projectId: feeProjectId, expectedBeneficiary: payable(expectedOperator)})) {

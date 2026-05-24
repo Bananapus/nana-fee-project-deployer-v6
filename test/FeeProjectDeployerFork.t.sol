@@ -501,8 +501,12 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         (JBRuleset memory currentRuleset,) = jbController.currentRulesetOf(FEE_PROJECT_ID);
         uint256 stageId = currentRuleset.id;
 
+        // Auto-issuance state and entrypoints live on REVOwner — the deployer just orchestrates the bundled
+        // `initializeRevnet` call during deployment.
+        REVOwner revOwner = REVOwner(revDeployer.OWNER());
+
         // Verify auto-issuance is available for the beneficiary.
-        uint256 autoIssuanceAmount = revDeployer.amountToAutoIssue({
+        uint256 autoIssuanceAmount = revOwner.amountToAutoIssue({
             revnetId: FEE_PROJECT_ID, stageId: stageId, beneficiary: AUTO_ISSUANCE_BENEFICIARY
         });
         assertEq(autoIssuanceAmount, MAINNET_AUTO_ISSUANCE, "Auto-issuance amount should match configured value");
@@ -511,7 +515,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         uint256 balanceBefore = jbTokens.totalBalanceOf(AUTO_ISSUANCE_BENEFICIARY, FEE_PROJECT_ID);
 
         // Call autoIssueFor.
-        revDeployer.autoIssueFor({revnetId: FEE_PROJECT_ID, stageId: stageId, beneficiary: AUTO_ISSUANCE_BENEFICIARY});
+        revOwner.autoIssueFor({revnetId: FEE_PROJECT_ID, stageId: stageId, beneficiary: AUTO_ISSUANCE_BENEFICIARY});
 
         // Verify the beneficiary received the tokens.
         uint256 balanceAfter = jbTokens.totalBalanceOf(AUTO_ISSUANCE_BENEFICIARY, FEE_PROJECT_ID);
@@ -520,7 +524,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         );
 
         // Verify the auto-issuance slot is now zero (consumed).
-        uint256 remaining = revDeployer.amountToAutoIssue({
+        uint256 remaining = revOwner.amountToAutoIssue({
             revnetId: FEE_PROJECT_ID, stageId: stageId, beneficiary: AUTO_ISSUANCE_BENEFICIARY
         });
         assertEq(remaining, 0, "Auto-issuance should be fully consumed");
