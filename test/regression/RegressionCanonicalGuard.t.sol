@@ -18,6 +18,9 @@ interface GuardTokens {
 interface GuardRevnetDeployer {
     function FEE_REVNET_ID() external view returns (uint256);
     function hashedEncodedConfigurationOf(uint256 projectId) external view returns (bytes32);
+}
+
+interface GuardRevnetOwner {
     function isOperatorOf(uint256 revnetId, address addr) external view returns (bool);
 }
 
@@ -60,7 +63,6 @@ contract MockGuardTokens is GuardTokens {
 contract MockGuardRevnetDeployer is GuardRevnetDeployer {
     uint256 internal _feeRevnetId;
     mapping(uint256 projectId => bytes32 hash) internal _hashOf;
-    mapping(uint256 projectId => mapping(address addr => bool isOperator)) internal _isOperatorOf;
 
     function setFeeRevnetId(uint256 feeRevnetId) external {
         _feeRevnetId = feeRevnetId;
@@ -70,16 +72,20 @@ contract MockGuardRevnetDeployer is GuardRevnetDeployer {
         _hashOf[projectId] = hash;
     }
 
-    function setIsOperatorOf(uint256 projectId, address addr, bool isOperator) external {
-        _isOperatorOf[projectId][addr] = isOperator;
-    }
-
     function FEE_REVNET_ID() external view override returns (uint256) {
         return _feeRevnetId;
     }
 
     function hashedEncodedConfigurationOf(uint256 projectId) external view override returns (bytes32) {
         return _hashOf[projectId];
+    }
+}
+
+contract MockGuardRevnetOwner is GuardRevnetOwner {
+    mapping(uint256 projectId => mapping(address addr => bool isOperator)) internal _isOperatorOf;
+
+    function setIsOperatorOf(uint256 projectId, address addr, bool isOperator) external {
+        _isOperatorOf[projectId][addr] = isOperator;
     }
 
     function isOperatorOf(uint256 projectId, address addr) external view override returns (bool) {
@@ -106,6 +112,7 @@ contract FeeProjectCanonicalGuardHarness {
     GuardDirectory internal immutable DIRECTORY;
     GuardTokens internal immutable TOKENS;
     GuardRevnetDeployer internal immutable REVNET_DEPLOYER;
+    GuardRevnetOwner internal immutable REVNET_OWNER;
     address internal immutable CONTROLLER;
 
     constructor(
@@ -113,12 +120,14 @@ contract FeeProjectCanonicalGuardHarness {
         GuardDirectory directory,
         GuardTokens tokens,
         GuardRevnetDeployer revnetDeployer,
+        GuardRevnetOwner revnetOwner,
         address controller
     ) {
         PROJECTS = projects;
         DIRECTORY = directory;
         TOKENS = tokens;
         REVNET_DEPLOYER = revnetDeployer;
+        REVNET_OWNER = revnetOwner;
         CONTROLLER = controller;
     }
 
@@ -152,7 +161,7 @@ contract FeeProjectCanonicalGuardHarness {
         if (DIRECTORY.controllerOf(feeProjectId) != CONTROLLER) return false;
         if (REVNET_DEPLOYER.FEE_REVNET_ID() != feeProjectId) return false;
         if (REVNET_DEPLOYER.hashedEncodedConfigurationOf(feeProjectId) != expectedConfigurationHash) return false;
-        if (!REVNET_DEPLOYER.isOperatorOf({revnetId: feeProjectId, addr: expectedOperator})) return false;
+        if (!REVNET_OWNER.isOperatorOf({revnetId: feeProjectId, addr: expectedOperator})) return false;
         if (!_projectTokenSymbolIs({projectId: feeProjectId, expectedSymbol: SYMBOL})) return false;
         return true;
     }
@@ -176,6 +185,7 @@ contract RegressionCanonicalGuardTest is Test {
     MockGuardDirectory internal directory;
     MockGuardTokens internal tokens;
     MockGuardRevnetDeployer internal deployer;
+    MockGuardRevnetOwner internal owner;
     FeeProjectCanonicalGuardHarness internal guard;
 
     address internal controller = makeAddr("controller");
@@ -186,8 +196,14 @@ contract RegressionCanonicalGuardTest is Test {
         directory = new MockGuardDirectory();
         tokens = new MockGuardTokens();
         deployer = new MockGuardRevnetDeployer();
+        owner = new MockGuardRevnetOwner();
         guard = new FeeProjectCanonicalGuardHarness({
-            projects: projects, directory: directory, tokens: tokens, revnetDeployer: deployer, controller: controller
+            projects: projects,
+            directory: directory,
+            tokens: tokens,
+            revnetDeployer: deployer,
+            revnetOwner: owner,
+            controller: controller
         });
 
         projects.setOwnerOf(FEE_PROJECT_ID, address(deployer));
@@ -195,7 +211,7 @@ contract RegressionCanonicalGuardTest is Test {
         tokens.setTokenOf(FEE_PROJECT_ID, address(new MockSymbolToken("NANA")));
         deployer.setFeeRevnetId(FEE_PROJECT_ID);
         deployer.setHashOf(FEE_PROJECT_ID, EXPECTED_HASH);
-        deployer.setIsOperatorOf(FEE_PROJECT_ID, operator, true);
+        owner.setIsOperatorOf(FEE_PROJECT_ID, operator, true);
     }
 
     function test_guardAcceptsExpectedCanonicalSurfaces() public view {
@@ -231,7 +247,7 @@ contract RegressionCanonicalGuardTest is Test {
     }
 
     function test_guardRejectsMissingExpectedOperator() public {
-        deployer.setIsOperatorOf(FEE_PROJECT_ID, operator, false);
+        owner.setIsOperatorOf(FEE_PROJECT_ID, operator, false);
 
         assertFalse(
             guard.feeProjectIsCanonical({
