@@ -777,7 +777,7 @@ contract TestFeeProjectDeployer is Test {
         REVAutoIssuance[] memory autoIssuances = stages[0].autoIssuances;
         for (uint256 i = 0; i < autoIssuances.length; i++) {
             assertEq(autoIssuances[i].beneficiary, operatorAddr, "All auto issuance beneficiaries are operator");
-            assertTrue(autoIssuances[i].beneficiary != address(0), "Beneficiary is not zero address");
+            assertNotEq(autoIssuances[i].beneficiary, address(0), "Beneficiary is not zero address");
         }
     }
 
@@ -806,7 +806,7 @@ contract TestFeeProjectDeployer is Test {
     }
 
     function test_saltsAreDifferent() public pure {
-        assertTrue(ERC20_SALT != SUCKER_SALT, "ERC20 and sucker salts are different");
+        assertNotEq(ERC20_SALT, SUCKER_SALT, "ERC20 and sucker salts are different");
     }
 
     // ====================================================================
