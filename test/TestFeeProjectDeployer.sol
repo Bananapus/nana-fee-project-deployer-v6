@@ -417,7 +417,7 @@ contract TestFeeProjectDeployer is Test {
         assertEq(splits[0].percent, JBConstants.SPLITS_TOTAL_PERCENT, "Split is 100% of splits");
         assertEq(splits[0].projectId, 0, "No project redirect");
         assertEq(splits[0].beneficiary, operatorAddr, "Beneficiary is operator");
-        assertEq(splits[0].preferAddToBalance, false, "Prefer add to balance is false");
+        assertFalse(splits[0].preferAddToBalance, "Prefer add to balance is false");
         assertEq(splits[0].lockedUntil, 0, "Not locked");
         assertEq(address(splits[0].hook), address(0), "No split hook");
     }
@@ -740,7 +740,7 @@ contract TestFeeProjectDeployer is Test {
 
     function test_splitDoesNotPreferAddToBalance() public view {
         JBSplit[] memory splits = builder.buildSplits(operatorAddr);
-        assertEq(splits[0].preferAddToBalance, false, "Does not prefer add to balance");
+        assertFalse(splits[0].preferAddToBalance, "Does not prefer add to balance");
     }
 
     // ====================================================================
@@ -777,7 +777,7 @@ contract TestFeeProjectDeployer is Test {
         REVAutoIssuance[] memory autoIssuances = stages[0].autoIssuances;
         for (uint256 i = 0; i < autoIssuances.length; i++) {
             assertEq(autoIssuances[i].beneficiary, operatorAddr, "All auto issuance beneficiaries are operator");
-            assertTrue(autoIssuances[i].beneficiary != address(0), "Beneficiary is not zero address");
+            assertNotEq(autoIssuances[i].beneficiary, address(0), "Beneficiary is not zero address");
         }
     }
 
@@ -806,7 +806,7 @@ contract TestFeeProjectDeployer is Test {
     }
 
     function test_saltsAreDifferent() public pure {
-        assertTrue(ERC20_SALT != SUCKER_SALT, "ERC20 and sucker salts are different");
+        assertNotEq(ERC20_SALT, SUCKER_SALT, "ERC20 and sucker salts are different");
     }
 
     // ====================================================================

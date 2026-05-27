@@ -25,7 +25,7 @@ contract CodexNemesisMissingNativeEthFeedTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(
                 JBPrices.JBPrices_PriceFeedNotFound.selector,
-                uint256(0),
+                uint256(1),
                 uint256(nativeCurrency),
                 uint256(JBCurrencyIds.ETH)
             )
