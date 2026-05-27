@@ -417,7 +417,7 @@ contract TestFeeProjectDeployer is Test {
         assertEq(splits[0].percent, JBConstants.SPLITS_TOTAL_PERCENT, "Split is 100% of splits");
         assertEq(splits[0].projectId, 0, "No project redirect");
         assertEq(splits[0].beneficiary, operatorAddr, "Beneficiary is operator");
-        assertEq(splits[0].preferAddToBalance, false, "Prefer add to balance is false");
+        assertFalse(splits[0].preferAddToBalance, "Prefer add to balance is false");
         assertEq(splits[0].lockedUntil, 0, "Not locked");
         assertEq(address(splits[0].hook), address(0), "No split hook");
     }
@@ -740,7 +740,7 @@ contract TestFeeProjectDeployer is Test {
 
     function test_splitDoesNotPreferAddToBalance() public view {
         JBSplit[] memory splits = builder.buildSplits(operatorAddr);
-        assertEq(splits[0].preferAddToBalance, false, "Does not prefer add to balance");
+        assertFalse(splits[0].preferAddToBalance, "Does not prefer add to balance");
     }
 
     // ====================================================================
