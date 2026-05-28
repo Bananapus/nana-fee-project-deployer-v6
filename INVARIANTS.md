@@ -1,7 +1,5 @@
 # Invariants of `nana-fee-project-deployer-v6`
 
-Last updated: 2026-05-28.
-
 Scope: the single deploy script in `script/Deploy.s.sol` plus the canonical-shape verification helpers it contains. The package has no production Solidity contracts of its own — it is a Foundry/Sphinx deployment script that calls `REVDeployer.deployFor` once per chain to launch Juicebox project `#1` as the canonical NANA fee revnet. Once `run()` completes, no surface in this repo retains live runtime authority; all subsequent behaviour lives in the composed packages (`nana-core-v6`, `revnet-core-v6`, `nana-router-terminal-v6`, `nana-suckers-v6`).
 
 This file is the per-repo scoped invariants doc. The ecosystem-wide guarantees for project `#1` after deployment live in [`../INVARIANTS.md`](../INVARIANTS.md) (Sections A–F cover NANA as revnet 1 alongside revnets 2–7). This document covers only what the deploy script structurally guarantees about the shape it puts on chain and the idempotence/canonical-replay checks that gate a second run.
