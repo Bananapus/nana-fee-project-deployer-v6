@@ -10,6 +10,7 @@
 | If you need... | Open this next |
 |---|---|
 | Repo overview and deployment shape | [`README.md`](./README.md), [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
+| Per-repo scoped invariants | [`INVARIANTS.md`](./INVARIANTS.md) |
 | Main deployment script | [`script/Deploy.s.sol`](./script/Deploy.s.sol) |
 | Main tests | [`test/TestFeeProjectDeployer.sol`](./test/TestFeeProjectDeployer.sol), [`test/FeeProjectEdgeCases.t.sol`](./test/FeeProjectEdgeCases.t.sol), [`test/FeeProjectDeployerFork.t.sol`](./test/FeeProjectDeployerFork.t.sol) |
 | Underlying revnet deployer | [`../revnet-core-v6/src/REVDeployer.sol`](../revnet-core-v6/src/REVDeployer.sol) |

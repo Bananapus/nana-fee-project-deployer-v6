@@ -2,12 +2,17 @@
 
 `@bananapus/fee-project-deployer-v6` deploys Juicebox project `#1`, the intended V6 protocol fee beneficiary. That project is economically important because many protocol fee flows in the workspace assume it exists and route there.
 
-Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md)  
-User journeys: [USER_JOURNEYS.md](./USER_JOURNEYS.md)  
-Skills: [SKILLS.md](./SKILLS.md)  
-Risks: [RISKS.md](./RISKS.md)  
-Administration: [ADMINISTRATION.md](./ADMINISTRATION.md)  
-Audit instructions: [AUDIT_INSTRUCTIONS.md](./AUDIT_INSTRUCTIONS.md)
+## Documentation
+
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — architecture overview
+- [USER_JOURNEYS.md](./USER_JOURNEYS.md) — user journeys
+- [SKILLS.md](./SKILLS.md) — skills reference
+- [RISKS.md](./RISKS.md) — risk surface
+- [INVARIANTS.md](./INVARIANTS.md) — invariants this repo guarantees
+- [ADMINISTRATION.md](./ADMINISTRATION.md) — administration playbook
+- [AUDIT_INSTRUCTIONS.md](./AUDIT_INSTRUCTIONS.md) — audit instructions
+- [STYLE_GUIDE.md](./STYLE_GUIDE.md) — code style conventions
+- [CHANGELOG.md](./CHANGELOG.md) — release notes
 
 ## Overview
 
