@@ -147,7 +147,7 @@ Changing any of these constants in a future revision and re-running on a chain t
 ## C.2 Tests under `test/`
 
 - **`test/TestFeeProjectDeployer.sol`** — `FeeProjectConfigBuilder` mirrors the script's configuration logic (without Sphinx / deployment-artifact reads) and exercises it against `MockREVDeployer` to assert the exact `REVConfig`, accounting contexts, and sucker deployer configuration that get passed to `REVDeployer.deployFor`. Locks A.1, A.2, A.3, A.4 against silent regression.
-- **`test/FeeProjectEdgeCases.t.sol`** — Stands up the full core + 721 hook + buyback + suckers + Croptop + revnet stack in-memory (no fork) and pushes the canonical NANA deployment through it. Exercises end-to-end behaviour against the same constants the production script uses; identifies edge cases like missing native-ETH price feeds (see `test/audit/CodexNemesisMissingNativeEthFeed.t.sol`).
+- **`test/FeeProjectEdgeCases.t.sol`** — Stands up the full core + 721 hook + buyback + suckers + Croptop + revnet stack in-memory (no fork) and pushes the canonical NANA deployment through it. Exercises end-to-end behaviour against the same constants the production script uses; identifies edge cases like missing native-ETH price feeds (see `test/regression/MissingNativeEthFeed.t.sol`).
 - **`test/FeeProjectDeployerFork.t.sol`** — Fork tests against live RPC endpoints; verifies the deployment shape holds on actually-deployed chains.
 - **`test/regression/LateStartTime.t.sol`** — Locks A.2.1 / RISKS §5.1 (historical start-time anchoring is intentional, even when `NANA_START_TIME` is in the past at deploy time).
 - **`test/regression/RegressionCanonicalGuard.t.sol`** — Locks B.1.1–B.1.4 (each canonical-replay property fails independently when violated).
