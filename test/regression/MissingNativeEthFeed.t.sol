@@ -10,7 +10,7 @@ import {JBPrices} from "@bananapus/core-v6/src/JBPrices.sol";
 import {JBConstants} from "@bananapus/core-v6/src/libraries/JBConstants.sol";
 import {JBCurrencyIds} from "@bananapus/core-v6/src/libraries/JBCurrencyIds.sol";
 
-contract CodexNemesisMissingNativeEthFeedTest is Test {
+contract MissingNativeEthFeedTest is Test {
     function test_missingNativeEthMatchingFeedRevertsFeeProjectCurrencyConversion() public {
         JBPrices prices = new JBPrices({
             directory: IJBDirectory(address(0)),
