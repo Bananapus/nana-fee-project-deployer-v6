@@ -447,7 +447,10 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         // The canonical-replay check resolves ownership against the REVOwner contract; the deployer only holds the
         // NFT transiently during `deployFor`.
         assertEq(jbProjects.ownerOf(FEE_PROJECT_ID), revnetOwner, "fee project NFT should rest at REVOwner");
-        assertTrue(jbProjects.ownerOf(FEE_PROJECT_ID) != address(revDeployer), "fee project NFT should not rest at the deployer");
+        assertTrue(
+            jbProjects.ownerOf(FEE_PROJECT_ID) != address(revDeployer),
+            "fee project NFT should not rest at the deployer"
+        );
     }
 
     // ───────────────────────── Test 2: Accepts payments
