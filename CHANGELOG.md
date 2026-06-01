@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.34 — Document NatSpec, comment, and lint conventions in STYLE_GUIDE
+
+- `STYLE_GUIDE.md`: made the existing documentation conventions explicit — expanded the NatSpec section to spell out the required tags for every member kind, added a Comments section describing how inline comments explain the WHY of each block and stay framed around current behavior, and expanded the Linting section to describe the zero-notes build-and-test bar and the standalone disable-directive rule.
+- Dependency floors: an attempt to raise the dependency caret floors to the latest published versions was held back because the latest `@croptop/core-v6` adds a constructor parameter to `CTPublisher` that the deploy test harness does not yet pass, so the floors remain unchanged in this release.
+
 ## 0.0.33 — Fix canonical-shape ownership check so re-runs are idempotent
 
 - `script/Deploy.s.sol`: the canonical-shape check now compares the fee project's NFT owner against the `REVOwner` contract (`revnet.owner`) instead of the basic deployer (`revnet.basicDeployer`). `REVDeployer.deployFor` permanently forwards the project NFT to `REVOwner` at the end of a deploy, so the old comparison never matched a real deployment and a re-run against an already-deployed fee project reverted `DeployScript_FeeProjectNotCanonical` instead of cleanly recognizing the project as canonical and no-op'ing.
