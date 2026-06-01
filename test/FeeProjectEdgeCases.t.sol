@@ -266,7 +266,13 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             exampleHook, IJB721TiersHookStore(address(hookStore)), addressRegistry, TRUSTED_FORWARDER
         );
 
-        publisher = new CTPublisher(jbDirectory, jbPermissions, FEE_PROJECT_ID, TRUSTED_FORWARDER);
+        publisher = new CTPublisher({
+            directory: jbDirectory,
+            permissions: jbPermissions,
+            feeProjectId: FEE_PROJECT_ID,
+            permit2: IPermit2(0x000000000022D473030F116dDEE9F6B43aC78BA3),
+            trustedForwarder: TRUSTED_FORWARDER
+        });
 
         // Deploy buyback hook, then bind chain-specific constants (PoolManager + oracleHook).
         JBBuybackHook buybackHook = new JBBuybackHook(
