@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.0.35 — Raise dependency floors to the latest published cohort
+
+- `package.json`: raised every dependency caret floor to its latest published version — `@bananapus/core-v6` `^0.0.72 → ^0.0.79`, `@rev-net/core-v6` `^0.0.78 → ^0.0.84`, `@croptop/core-v6` `^0.0.60 → ^0.0.64`, `@bananapus/router-terminal-v6` `^0.0.56 → ^0.0.60`, `@bananapus/suckers-v6` `^0.0.61 → ^0.0.67`, `@bananapus/721-hook-v6` `^0.0.59 → ^0.0.65`, `@bananapus/buyback-hook-v6` `^0.0.59 → ^0.0.66`, `@bananapus/address-registry-v6` `^0.0.29 → ^0.0.33`, and `@bananapus/permission-ids-v6` `^0.0.27 → ^0.0.29`. Added `@bananapus/ownable-v6` `^0.0.36` as an explicit dev dependency so the resolved copy keeps pace with what the bumped `@croptop/core-v6` and `@rev-net/core-v6` expect.
+- `@croptop/core-v6` `0.0.64` adds a `permit2` argument to the `CTPublisher` constructor (inserted ahead of `trustedForwarder`). The two deploy test harnesses (`test/FeeProjectDeployerFork.t.sol`, `test/FeeProjectEdgeCases.t.sol`) now pass the canonical Permit2 address through that argument so they keep building against the new constructor shape.
+
+## 0.0.34 — Document NatSpec, comment, and lint conventions in STYLE_GUIDE
+
+- `STYLE_GUIDE.md`: made the existing documentation conventions explicit — expanded the NatSpec section to spell out the required tags for every member kind, added a Comments section describing how inline comments explain the WHY of each block and stay framed around current behavior, and expanded the Linting section to describe the zero-notes build-and-test bar and the standalone disable-directive rule.
+- Dependency floors: an attempt to raise the dependency caret floors to the latest published versions was held back because the latest `@croptop/core-v6` adds a constructor parameter to `CTPublisher` that the deploy test harness does not yet pass, so the floors remain unchanged in this release.
+
 ## 0.0.33 — Fix canonical-shape ownership check so re-runs are idempotent
 
 - `script/Deploy.s.sol`: the canonical-shape check now compares the fee project's NFT owner against the `REVOwner` contract (`revnet.owner`) instead of the basic deployer (`revnet.basicDeployer`). `REVDeployer.deployFor` permanently forwards the project NFT to `REVOwner` at the end of a deploy, so the old comparison never matched a real deployment and a re-run against an already-deployed fee project reverted `DeployScript_FeeProjectNotCanonical` instead of cleanly recognizing the project as canonical and no-op'ing.
