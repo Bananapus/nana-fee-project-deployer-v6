@@ -234,7 +234,10 @@ contract DeployScript is Script, Sphinx {
         view
         returns (bool)
     {
-        if (core.projects.ownerOf(feeProjectId) != address(revnet.basicDeployer)) return false;
+        // `REVDeployer.deployFor` permanently forwards the project NFT to the REVOwner contract, which is the
+        // project's authoritative owner after deployment. A re-run against an already-deployed fee project must
+        // recognize ownership by that contract as canonical (so the script cleanly no-ops on replay).
+        if (core.projects.ownerOf(feeProjectId) != address(revnet.owner)) return false;
         if (address(core.controller.DIRECTORY().controllerOf(feeProjectId)) != address(core.controller)) return false;
         if (revnet.basicDeployer.FEE_REVNET_ID() != feeProjectId) return false;
         if (revnet.basicDeployer.hashedEncodedConfigurationOf(feeProjectId) != expectedConfigurationHash) {

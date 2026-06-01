@@ -147,7 +147,8 @@ contract FeeProjectCanonicalGuardHarness {
         });
     }
 
-    /// @dev Mirrors `Deploy.s.sol` so the regression pins the current standalone skip guard.
+    /// @dev Mirrors `Deploy.s.sol` so the regression pins the current standalone skip guard. The ownership check
+    /// compares against the REVOwner contract because that is where `REVDeployer.deployFor` parks the project NFT.
     function _feeProjectIsCanonical(
         uint256 feeProjectId,
         bytes32 expectedConfigurationHash,
@@ -157,7 +158,7 @@ contract FeeProjectCanonicalGuardHarness {
         view
         returns (bool)
     {
-        if (PROJECTS.ownerOf(feeProjectId) != address(REVNET_DEPLOYER)) return false;
+        if (PROJECTS.ownerOf(feeProjectId) != address(REVNET_OWNER)) return false;
         if (DIRECTORY.controllerOf(feeProjectId) != CONTROLLER) return false;
         if (REVNET_DEPLOYER.FEE_REVNET_ID() != feeProjectId) return false;
         if (REVNET_DEPLOYER.hashedEncodedConfigurationOf(feeProjectId) != expectedConfigurationHash) return false;
@@ -206,7 +207,9 @@ contract RegressionCanonicalGuardTest is Test {
             controller: controller
         });
 
-        projects.setOwnerOf(FEE_PROJECT_ID, address(deployer));
+        // After a real deployment, `REVDeployer.deployFor` permanently forwards the project NFT to the REVOwner
+        // contract, which is the project's authoritative owner. Stub the canonical owner accordingly.
+        projects.setOwnerOf(FEE_PROJECT_ID, address(owner));
         directory.setControllerOf(FEE_PROJECT_ID, controller);
         tokens.setTokenOf(FEE_PROJECT_ID, address(new MockSymbolToken("NANA")));
         deployer.setFeeRevnetId(FEE_PROJECT_ID);
@@ -220,6 +223,31 @@ contract RegressionCanonicalGuardTest is Test {
                 feeProjectId: FEE_PROJECT_ID, expectedConfigurationHash: EXPECTED_HASH, expectedOperator: operator
             }),
             "baseline guard should pass"
+        );
+    }
+
+    function test_guardRecognizesFeeProjectOwnedByRevnetOwnerAsCanonical() public {
+        // This is the real post-deployment state: the project NFT is owned by the REVOwner contract. A re-run must
+        // recognize it as canonical and no-op rather than reverting as not-canonical.
+        projects.setOwnerOf(FEE_PROJECT_ID, address(owner));
+
+        assertTrue(
+            guard.feeProjectIsCanonical({
+                feeProjectId: FEE_PROJECT_ID, expectedConfigurationHash: EXPECTED_HASH, expectedOperator: operator
+            }),
+            "fee project owned by REVOwner must be recognized as canonical"
+        );
+    }
+
+    function test_guardRejectsFeeProjectStillOwnedByDeployer() public {
+        // The project NFT never rests at the deployer after a real deployment; treat that state as non-canonical.
+        projects.setOwnerOf(FEE_PROJECT_ID, address(deployer));
+
+        assertFalse(
+            guard.feeProjectIsCanonical({
+                feeProjectId: FEE_PROJECT_ID, expectedConfigurationHash: EXPECTED_HASH, expectedOperator: operator
+            }),
+            "owner check must compare against the authoritative REVOwner contract, not the deployer"
         );
     }
 
@@ -281,6 +309,14 @@ contract RegressionCanonicalGuardTest is Test {
             endNeedle: "function _reservedSplitIsCanonical("
         });
 
+        assertTrue(
+            _contains(guardSource, "ownerOf(feeProjectId) != address(revnet.owner)"),
+            "guard checks ownership against the authoritative REVOwner contract"
+        );
+        assertFalse(
+            _contains(guardSource, "ownerOf(feeProjectId) != address(revnet.basicDeployer)"),
+            "guard must not compare project ownership against the basic deployer"
+        );
         assertTrue(_contains(guardSource, "FEE_REVNET_ID()"), "guard checks fee-revnet dependency");
         assertTrue(
             _contains(guardSource, "hashedEncodedConfigurationOf(feeProjectId) != expectedConfigurationHash"),
