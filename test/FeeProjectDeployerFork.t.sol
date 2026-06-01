@@ -424,6 +424,32 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         assertTrue(terminals.length > 0, "At least one terminal should be configured");
     }
 
+    /// @notice After a real deployment the project NFT must rest at the REVOwner contract, not the deployer. This
+    ///         is the authoritative owner the deploy script's canonical-replay check compares against, so the
+    ///         script can recognize an already-deployed fee project and no-op idempotently on a re-run.
+    function testFork_FeeProjectOwnerIsRevnetOwnerAfterDeploy() public {
+        (
+            REVConfig memory config,
+            JBAccountingContext[] memory terminalConfigs,
+            REVSuckerDeploymentConfig memory suckerConfig
+        ) = _buildFeeProjectConfig();
+
+        vm.prank(MULTISIG);
+        revDeployer.deployFor({
+            revnetId: FEE_PROJECT_ID,
+            configuration: config,
+            accountingContextsToAccept: terminalConfigs,
+            suckerDeploymentConfiguration: suckerConfig
+        });
+
+        address revnetOwner = revDeployer.OWNER();
+
+        // The canonical-replay check resolves ownership against the REVOwner contract; the deployer only holds the
+        // NFT transiently during `deployFor`.
+        assertEq(jbProjects.ownerOf(FEE_PROJECT_ID), revnetOwner, "fee project NFT should rest at REVOwner");
+        assertTrue(jbProjects.ownerOf(FEE_PROJECT_ID) != address(revDeployer), "fee project NFT should not rest at the deployer");
+    }
+
     // ───────────────────────── Test 2: Accepts payments
     // ─────────────────────────
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.33 — Fix canonical-shape ownership check so re-runs are idempotent
+
+- `script/Deploy.s.sol`: the canonical-shape check now compares the fee project's NFT owner against the `REVOwner` contract (`revnet.owner`) instead of the basic deployer (`revnet.basicDeployer`). `REVDeployer.deployFor` permanently forwards the project NFT to `REVOwner` at the end of a deploy, so the old comparison never matched a real deployment and a re-run against an already-deployed fee project reverted `DeployScript_FeeProjectNotCanonical` instead of cleanly recognizing the project as canonical and no-op'ing.
+- Regression coverage (`test/regression/RegressionCanonicalGuard.t.sol`): the harness and its stub now reflect the real post-deploy owner (`REVOwner`); added coverage that a fee project owned by `REVOwner` is recognized as canonical and that one still owned by the deployer is rejected.
+- Fork coverage (`test/FeeProjectDeployerFork.t.sol`): added a test that runs the real deploy path and asserts the project NFT rests at `REVOwner`, not the deployer.
+- Docs (`INVARIANTS.md`, `README.md`): corrected the post-deploy NFT-ownership references to `REVOwner`.
+
 ## 0.0.24 — Bump v6 deps to nana-core-v6 0.0.53 cohort
 
 - `@bananapus/core-v6`: `^0.0.49 → ^0.0.53` ([PR #145](https://github.com/Bananapus/nana-core-v6/pull/145)).
