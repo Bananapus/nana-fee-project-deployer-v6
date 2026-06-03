@@ -31,35 +31,75 @@ import {IJBSplitHook} from "@bananapus/core-v6/src/interfaces/IJBSplitHook.sol";
 import {Sphinx} from "@sphinx-labs/contracts/contracts/foundry/SphinxPlugin.sol";
 import {Script} from "forge-std/Script.sol";
 
+/// @notice Deploys Juicebox project `#1`, the canonical NANA fee revnet, into its exact ecosystem-expected shape, and
+/// idempotently no-ops (or reverts) when an existing project `#1` already matches that shape.
 contract DeployScript is Script, Sphinx {
+    //*********************************************************************//
+    // --------------------------- custom errors ------------------------- //
+    //*********************************************************************//
+
+    /// @notice Thrown when project `#1` already exists but does not match the canonical NANA fee-project shape.
+    /// @param projectId The fee project id that failed the canonical-shape check.
     error DeployScript_FeeProjectNotCanonical(uint256 projectId);
 
-    /// @notice tracks the deployment of the core contracts for the chain we are deploying to.
+    //*********************************************************************//
+    // ---------------------- private stored properties ------------------ //
+    //*********************************************************************//
+
+    /// @notice Tracks the deployment of the core contracts for the chain being deployed to.
     CoreDeployment core;
-    /// @notice tracks the deployment of the revnet contracts for the chain we are deploying to.
+    /// @notice Tracks the deployment of the revnet contracts for the chain being deployed to.
     RevnetCoreDeployment revnet;
-    /// @notice tracks the deployment of the sucker contracts for the chain we are deploying to.
+    /// @notice Tracks the deployment of the sucker contracts for the chain being deployed to.
     SuckerDeployment suckers;
-    /// @notice tracks the deployment of the router terminal.
+    /// @notice Tracks the deployment of the router terminal for the chain being deployed to.
     RouterTerminalDeployment routerTerminal;
 
+    //*********************************************************************//
+    // ------------------------- internal constants ---------------------- //
+    //*********************************************************************//
+
+    /// @notice The CREATE2 salt for the project's ERC-20, mixed with the deployer address so the token shares one
+    /// deterministic address across chains.
     bytes32 constant ERC20_SALT = "_NANA_ERC20_SALTV6__";
+    /// @notice The CREATE2 salt for the project's suckers, mixed with the deployer address so sucker pairs share
+    /// deterministic addresses across chains.
     bytes32 constant SUCKER_SALT = "_NANA_SUCKER_SALTV6__";
+    /// @notice The canonical name of the fee project's token.
     string constant NAME = "Bananapus (Juicebox V6)";
+    /// @notice The canonical ticker of the fee project's token.
     string constant SYMBOL = "NANA";
+    /// @notice The canonical IPFS metadata pointer for the fee project.
     string constant PROJECT_URI = "ipfs://QmWCgCaryfsJYBu5LczFuBz3UKK5VEU3BZFYp2mHJTLeRQ";
+    /// @notice The accounting-context currency keyed to the native token, so payments and cash-outs read against the
+    /// chain-native asset rather than a price feed.
     uint32 constant NATIVE_CURRENCY = uint32(uint160(JBConstants.NATIVE_TOKEN));
+    /// @notice The ruleset base currency, fixing NANA as ETH-denominated with no price-feed dependency.
     uint32 constant ETH_CURRENCY = JBCurrencyIds.ETH;
+    /// @notice The token decimals, matching the protocol-wide 18-decimal requirement.
     uint8 constant DECIMALS = 18;
+    /// @notice One whole token in base units, used to express issuance amounts in human terms.
     uint256 constant DECIMAL_MULTIPLIER = 10 ** DECIMALS;
+    /// @notice The canonical cross-chain issuance anchor, intentionally in the past so every chain shares one schedule.
     uint48 constant NANA_START_TIME = 1_740_089_444;
+    /// @notice The auto-issuance amount minted to the operator on Ethereum (and its testnet stand-in).
     uint104 constant NANA_MAINNET_AUTO_ISSUANCE = 34_614_774_622_547_324_824_200;
+    /// @notice The auto-issuance amount minted to the operator on Base (and its testnet stand-in).
     uint104 constant NANA_BASE_AUTO_ISSUANCE = 1_604_412_323_715_200_204_800;
+    /// @notice The auto-issuance amount minted to the operator on Optimism (and its testnet stand-in).
     uint104 constant NANA_OP_AUTO_ISSUANCE = 6_266_215_368_602_910_600;
+    /// @notice The auto-issuance amount minted to the operator on Arbitrum (and its testnet stand-in).
     uint104 constant NANA_ARB_AUTO_ISSUANCE = 105_160_496_145_000_000;
 
+    /// @notice The canonical NANA operator multisig that owns the reserved split, the auto-issuance beneficiary role,
+    /// and the per-revnet operator role.
     address operator;
 
+    //*********************************************************************//
+    // ---------------------- external transactions ---------------------- //
+    //*********************************************************************//
+
+    /// @notice Declares the Sphinx project name and the mainnet and testnet chain sets this script deploys to.
     function configureSphinx() public override {
         // Safe owners and threshold are resolved by the Sphinx project config.
         sphinxConfig.projectName = "nana-fee-project";
@@ -67,6 +107,8 @@ contract DeployScript is Script, Sphinx {
         sphinxConfig.testnets = ["ethereum_sepolia", "optimism_sepolia", "base_sepolia", "arbitrum_sepolia"];
     }
 
+    /// @notice The Forge entrypoint: loads the sibling-package deployment artifacts for this chain, sets the operator,
+    /// and runs the deployment transactions.
     function run() public {
         // Get the deployment addresses for the nana CORE for this chain.
         // We want to do this outside of the `sphinx` modifier.
@@ -96,6 +138,8 @@ contract DeployScript is Script, Sphinx {
         deploy();
     }
 
+    /// @notice The Sphinx-wrapped deployment body: launches the canonical NANA fee revnet on first run, or verifies
+    /// canonical shape and no-ops (reverting on mismatch) when project `#1` already exists.
     function deploy() public sphinx {
         uint256 feeProjectId = 1;
 
@@ -225,6 +269,15 @@ contract DeployScript is Script, Sphinx {
             });
     }
 
+    //*********************************************************************//
+    // ------------------------ internal views --------------------------- //
+    //*********************************************************************//
+
+    /// @notice Checks whether an existing fee project matches the canonical NANA fee-project shape in every property.
+    /// @param feeProjectId The fee project id to check.
+    /// @param expectedConfigurationHash The expected encoded-configuration hash the on-chain config must equal.
+    /// @param expectedOperator The expected operator multisig address.
+    /// @return Whether the existing project matches the canonical shape across all checked properties.
     function _feeProjectIsCanonical(
         uint256 feeProjectId,
         bytes32 expectedConfigurationHash,
@@ -253,6 +306,10 @@ contract DeployScript is Script, Sphinx {
         return true;
     }
 
+    /// @notice Mirrors `REVDeployer`'s stored-configuration hash so the script can compare against on-chain state
+    /// without trusting it, returning the zero hash on a stage start-time monotonicity violation to force a mismatch.
+    /// @param configuration The revnet configuration to hash.
+    /// @return The encoded-configuration hash, or `bytes32(0)` when stage start times are not strictly increasing.
     function _encodedConfigurationHashOf(REVConfig memory configuration) internal view returns (bytes32) {
         bytes memory encodedConfiguration = abi.encode(
             configuration.baseCurrency,
@@ -302,6 +359,11 @@ contract DeployScript is Script, Sphinx {
         return keccak256(encodedConfiguration);
     }
 
+    /// @notice Checks whether the project's current reserved-token split is the canonical single 100%-to-operator
+    /// split with no project routing, hook, or lock.
+    /// @param projectId The project id to check.
+    /// @param expectedBeneficiary The expected sole reserved-split beneficiary.
+    /// @return Whether the reserved-token split matches the canonical shape.
     function _reservedSplitIsCanonical(
         uint256 projectId,
         address payable expectedBeneficiary
@@ -327,6 +389,10 @@ contract DeployScript is Script, Sphinx {
         return true;
     }
 
+    /// @notice Checks whether the project's terminal wiring is canonical: the multi-terminal is the primary native-ETH
+    /// terminal, the router-terminal registry is also a terminal, and the native accounting context matches.
+    /// @param projectId The project id to check.
+    /// @return Whether the native-ETH terminal wiring matches the canonical shape.
     function _nativeTerminalConfigIsCanonical(uint256 projectId) internal view returns (bool) {
         if (core.controller.DIRECTORY().primaryTerminalOf(projectId, JBConstants.NATIVE_TOKEN) != core.terminal) {
             return false;
@@ -345,6 +411,11 @@ contract DeployScript is Script, Sphinx {
         return true;
     }
 
+    /// @notice Checks whether the project's deployed ERC-20 reports the expected symbol, reading it via a low-level
+    /// staticcall so a non-ERC-20 address at the token slot fails safely instead of reverting.
+    /// @param projectId The project id whose token to check.
+    /// @param expectedSymbol The expected token symbol.
+    /// @return Whether a token is deployed and its symbol equals the expected symbol.
     function _projectTokenSymbolIs(uint256 projectId, string memory expectedSymbol) internal view returns (bool) {
         address token = address(core.tokens.tokenOf(projectId));
         if (token == address(0)) return false;

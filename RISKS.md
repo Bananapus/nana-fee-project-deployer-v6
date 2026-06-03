@@ -1,13 +1,13 @@
-# Fee Project Deployer Risk Register
+# Fee project deployer risk register
 
 This file covers the risks around project `#1`, the protocol fee sink.
 
-## How To Use This File
+## How to use this file
 
 - Read `Priority risks` first. Project `#1` deserves stricter operational treatment than a normal deployment.
 - Treat `Invariants to verify` as ecosystem-level checks, not local niceties.
 
-## Priority Risks
+## Priority risks
 
 | Priority | Risk | Why it matters | Primary controls |
 |----------|------|----------------|------------------|
@@ -15,7 +15,7 @@ This file covers the risks around project `#1`, the protocol fee sink.
 | P1 | Post-deploy liveness degradation | If project `#1` cannot accept fees cleanly, downstream repos often keep operating while fee economics silently degrade. | Monitoring, smoke tests, and routing review. |
 | P1 | Governance or ownership irreversibility mistakes | The fee project's ownership and revnet wiring are opinionated and hard to unwind. | Careful one-shot configuration review. |
 
-## 1. Trust Assumptions
+## 1. Trust assumptions
 
 - **Sphinx deployment is trusted.**
 - **The operator multisig is trusted.**
@@ -23,7 +23,7 @@ This file covers the risks around project `#1`, the protocol fee sink.
 - **Router-terminal artifact availability matters.**
 - **Revnet deployer assumptions apply.**
 
-## 2. Configuration Risks
+## 2. Configuration risks
 
 - **Hardcoded parameters are permanent once deployed.**
 - **Idempotence must be exact.** A pre-existing project `#1` should be accepted only if it matches the expected NANA
@@ -34,11 +34,11 @@ This file covers the risks around project `#1`, the protocol fee sink.
 - **Terminal selection is configured, not locked.**
 - **Economic parameters like `splitPercent` and `cashOutTaxRate` are highly sensitive.**
 
-## 3. Project `#1` Significance
+## 3. Project `#1` significance
 
 This is the fee project. Maximum scrutiny on deployment parameters is warranted.
 
-## 4. Post-Deployment Risks
+## 4. Post-deployment risks
 
 - **Terminal availability matters.**
 - **Terminal redirection risk persists until routing is locked.**
@@ -46,13 +46,13 @@ This is the fee project. Maximum scrutiny on deployment parameters is warranted.
 - **Issuance decay compounds over time.**
 - **Operator responsibility remains concentrated.**
 
-## 5. Accepted Behaviors
+## 5. Accepted behaviors
 
 ### 5.1 Historical stage anchoring is intentional
 
 `NANA_START_TIME` may already be in the past at deployment time. That is accepted because the fee project is intended to share one canonical issuance schedule across chains.
 
-## 6. Invariants To Verify
+## 6. Invariants to verify
 
 - project `#1` is owned by the intended deployer surface
 - replaying the deploy script rejects wrong-but-plausible existing project `#1` configurations

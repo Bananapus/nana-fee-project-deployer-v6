@@ -1,6 +1,6 @@
 # Administration
 
-## At A Glance
+## At a glance
 
 | Item | Details |
 | --- | --- |
@@ -13,17 +13,17 @@
 
 This repo is about controlling one critical deployment, not managing a general-purpose runtime surface.
 
-## Control Model
+## Control model
 
 - deployment parameters define the important behavior
 - post-deploy runtime control moves into revnet, directory, router-terminal, and sucker surfaces
 - terminal locking is a separate operational decision after deployment
 
-## Privileged Surfaces
+## Privileged surfaces
 
 - `script/Deploy.s.sol`
 
-## Operational Notes
+## Operational notes
 
 - review project `#1` as a global assumption
 - verify operator and terminal targets before deployment
@@ -34,11 +34,11 @@ This repo is about controlling one critical deployment, not managing a general-p
 - recovery is mostly redeploy-and-migrate, not in-place repair
 - unlocked terminal routing may still be adjustable after deployment
 
-## Admin Boundaries
+## Admin boundaries
 
 - this repo does not own runtime fee logic after deployment
 - it cannot hot-fix bad immutable parameters
 
-## Source Map
+## Source map
 
 - `script/Deploy.s.sol`

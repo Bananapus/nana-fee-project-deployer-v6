@@ -6,18 +6,18 @@ This file is the per-repo scoped invariants doc. The ecosystem-wide guarantees f
 
 ---
 
-# Section A — Guarantees to Users / Downstream Consumers
+## Section A — Guarantees to users and downstream consumers
 
 The "users" of this package are downstream consumers that route protocol fees to project `#1`: every `JBMultiTerminal` deployed by `nana-core-v6` (which sends 28-day-held fees to project 1), `REVOwner.afterCashOutRecordedWith` (which forwards rev fees), `JBReferralSplitHook` (which is bound to `FEE_PROJECT_ID == 1`), Defifa's `fulfillCommitmentsOf`, and every operator who relies on the fee project existing in the expected shape.
 
-## A.1 Project identity
+### A.1 Project identity
 
 - **A.1.1 Project ID is `1`, full stop.** The script hardcodes `uint256 feeProjectId = 1` at `script/Deploy.s.sol:100`. There is no path through this script that deploys the fee revnet at any other project ID. The whole ecosystem assumes project `#1` is the fee sink (`JBMultiTerminal._FEE_BENEFICIARY_PROJECT_ID`, `REVDeployer.FEE_REVNET_ID`, `JBReferralSplitHook.FEE_PROJECT_ID`); this script puts the canonical NANA shape onto that exact slot.
 - **A.1.2 Canonical name, symbol, URI, ERC-20 salt.** `NAME = "Bananapus (Juicebox V6)"`, `SYMBOL = "NANA"`, `PROJECT_URI = "ipfs://QmWCgCaryfsJYBu5LczFuBz3UKK5VEU3BZFYp2mHJTLeRQ"`, `ERC20_SALT = "_NANA_ERC20_SALTV6__"` (`script/Deploy.s.sol:46–50`). The ERC-20 deployment salt is mixed with `address(this) == REVDeployer` by the deployer, so the resulting ERC-20 address is CREATE2-deterministic across chains for this name/symbol/salt tuple.
 - **A.1.3 Operator is the canonical NANA multisig.** `operator = 0x80a8F7a4bD75b539CE26937016Df607fdC9ABeb5` is hardcoded at `script/Deploy.s.sol:93`. This address receives the full reserved-token split, is the auto-issuance beneficiary on every supported chain, and becomes the revnet's per-revnet operator under `REVOwner._operatorPermissionIndexesOf` (see `../INVARIANTS.md` B.1).
 - **A.1.4 Single accepted token: chain-native ETH.** The only accounting context written is `{token: NATIVE_TOKEN, decimals: 18, currency: NATIVE_CURRENCY}` (`script/Deploy.s.sol:106–107`). NANA accepts only native ETH on every supported chain; no ERC-20 payment surface is configured.
 
-## A.2 Economic configuration (one stage, frozen at deploy)
+### A.2 Economic configuration (one stage, frozen at deploy)
 
 - **A.2.1 One stage only.** `stageConfigurations` has length 1 (`script/Deploy.s.sol:140`). The whole ruleset for the life of NANA is the single `REVStageConfig` defined at `script/Deploy.s.sol:141–152`. No queued successor; the stage cycles indefinitely under the revnet's queueing logic (which this repo does NOT carry — see `../INVARIANTS.md` C.7 and Section D Cross-Cutting #13: rulesets are frozen post-deploy because no address retains `LAUNCH_RULESETS` / `QUEUE_RULESETS`).
 - **A.2.2 Stage parameters are exact.**
@@ -39,7 +39,7 @@ The "users" of this package are downstream consumers that route protocol fees to
 - **A.2.5 `scopeCashOutsToLocalBalances = false`.** `script/Deploy.s.sol:159`. Cash-outs and REVLoans aggregate supply/surplus across all sucker-connected chains. This is the deliberate choice for the fee revnet (and revnets 1–7 generally) — see `../INVARIANTS.md` D2.7 for the arbitrage-equilibration rationale.
 - **A.2.6 Base currency is ETH.** `baseCurrency = ETH_CURRENCY = JBCurrencyIds.ETH` (`script/Deploy.s.sol:157`). NANA is ETH-denominated; no Chainlink dependency for payment or cashout.
 
-## A.3 Bridge configuration (suckers)
+### A.3 Bridge configuration (suckers)
 
 - **A.3.1 Mainnet hub fans out to three L2s.** On chain `1` (mainnet) or `11_155_111` (sepolia), the script writes three `JBSuckerDeployerConfig` entries: OP, Base, Arbitrum deployers (`script/Deploy.s.sol:172–182`). Mainnet is the hub topology.
 - **A.3.2 L2 spokes target mainnet.** On every other supported chain, the script writes a single sucker deployer entry that prefers OP, falls back to Base, then Arbitrum — whichever has a non-zero deployer address in the loaded sucker artifacts (`script/Deploy.s.sol:184–197`). Explicit revert `"L2 > L1 Sucker is not configured"` if no L2→L1 deployer is available; the script cannot silently ship without bridge connectivity.
@@ -47,7 +47,7 @@ The "users" of this package are downstream consumers that route protocol fees to
 - **A.3.4 Shared sucker salt across chains.** `SUCKER_SALT = "_NANA_SUCKER_SALTV6__"` (`script/Deploy.s.sol:47`). Combined with the deployer's address-mixing, this makes sucker pair addresses deterministic across chains for matched deployments.
 - **A.3.5 `peer = bytes32(0)` (resolve at deploy).** All `JBSuckerDeployerConfig` entries pass `peer: bytes32(0)`, meaning the sucker deployer computes the peer address from the salt and the chain-specific deployer; no externally-supplied peer is trusted in.
 
-## A.4 Terminal wiring
+### A.4 Terminal wiring
 
 - **A.4.1 Multi-terminal accepts native ETH.** `accountingContextsToAccept[0]` registers `JBMultiTerminal` (the chain's `core.terminal`) for `NATIVE_TOKEN` (`script/Deploy.s.sol:103–107`). This is the canonical pay/cashout terminal for the fee project.
 - **A.4.2 Router-terminal registry is added as a terminal.** Via `revnet.basicDeployer.deployFor`, `REVDeployer` registers the router-terminal-registry surface alongside the multi-terminal. The canonical check `_nativeTerminalConfigIsCanonical` (`script/Deploy.s.sol:330–345`) asserts `core.terminal` is the primary terminal for native ETH AND `routerTerminal.registry` is also a terminal of the project. Both must be present.
@@ -55,9 +55,9 @@ The "users" of this package are downstream consumers that route protocol fees to
 
 ---
 
-# Section B — Guarantees About the Deploy Script Itself
+## Section B — Guarantees about the deploy script itself
 
-## B.1 Idempotence and replay safety
+### B.1 Idempotence and replay safety
 
 - **B.1.1 Pre-existing fee project must match canonical shape or revert.** If `DIRECTORY.controllerOf(feeProjectId) != address(0)` (a controller is already registered for project 1), the script calls `_feeProjectIsCanonical` (`script/Deploy.s.sol:206–213`). On mismatch it reverts `DeployScript_FeeProjectNotCanonical(feeProjectId)`; on match it returns without touching anything. This is the only path that exits without launching.
 - **B.1.2 Canonical match checks nine independent properties** (`script/Deploy.s.sol:228–253`):
@@ -74,13 +74,13 @@ The "users" of this package are downstream consumers that route protocol fees to
 - **B.1.4 Zero-amount auto-issuances are skipped in the hash.** Inside the stage loop, `if (autoIssuance.count != 0) encodedConfiguration = abi.encode(...)` (`script/Deploy.s.sol:287`). A zero-count entry produces the same hash as a missing entry. The script always writes non-zero counts (A.2.4), so this is forward compatibility, not an operational concern for NANA.
 - **B.1.5 Replay-after-launch is a pure no-op.** When the canonical check succeeds, the script returns at `script/Deploy.s.sol:212` BEFORE calling `core.projects.approve` or `revnet.basicDeployer.deployFor`. No state mutation, no event emission, no gas spent on the REVDeployer side.
 
-## B.2 First-run authority handoff
+### B.2 First-run authority handoff
 
 - **B.2.1 Script approves `REVDeployer` to spend the project NFT just-in-time.** `core.projects.approve(revnet.basicDeployer, feeProjectId)` runs only on the first-launch path (`script/Deploy.s.sol:216`), right before `deployFor`. The Sphinx safe (the script's `msg.sender` under Sphinx execution) is expected to currently hold project NFT `#1`; on a fresh chain, the Sphinx safe inherits it from `JBProjects.createFor` invoked transitively during one of the earlier deployment scripts in the chain's setup sequence (see `deploy-all-v6` orchestration for the project-1 mint path).
 - **B.2.2 `REVDeployer.deployFor` forwards the project NFT to `REVOwner`.** `REVDeployer` takes custody of the project NFT only transiently during `deployFor`; at the end of the deploy it forwards the NFT to the `REVOwner` contract (`revnet.owner`). After `deployFor` completes, `JBProjects.ownerOf(1)` reads as `address(revnet.owner)` — that is canonical-shape property B.1.2 (1). The Sphinx safe loses ownership of project `#1` permanently. From this point forward, the address that holds the NANA project NFT is `REVOwner`, which exposes a constrained, operator-rotatable surface; `REVDeployer` retains its own bounded role for extending suckers to new chains.
 - **B.2.3 No live authority on the script after `run()` returns.** The deploy script holds no storage. Once `run()` finishes, the script contract has no continued role. All operational power passes to `REVOwner` (operator-rotatable, see `../INVARIANTS.md` B.1) and the per-chain Sphinx safe / `_CRITICAL_INFRA_OWNER` (for infra-level concerns).
 
-## B.3 Cross-chain consistency
+### B.3 Cross-chain consistency
 
 - **B.3.1 Chain set is fixed by Sphinx config.** `configureSphinx` declares mainnets `[ethereum, optimism, base, arbitrum]` and testnets `[ethereum_sepolia, optimism_sepolia, base_sepolia, arbitrum_sepolia]` (`script/Deploy.s.sol:63–68`). Sphinx orchestration determines which chains the script runs on; any chain not in these arrays cannot be reached by `npm run deploy:mainnets` / `npm run deploy:testnets`.
 - **B.3.2 Testnet/mainnet branching uses `block.chainid` only for chain-ID substitution.** `isTestnet` (`script/Deploy.s.sol:121–123`) picks WHICH chain IDs go into the `REVAutoIssuance.chainId` field, but does NOT change auto-issuance amounts, splits, stage parameters, or any other policy field. Every chain in a set therefore produces an identical encoded-configuration hash. This is the load-bearing cross-chain parity invariant.
@@ -88,15 +88,15 @@ The "users" of this package are downstream consumers that route protocol fees to
 
 ---
 
-# Section C — Per-File Operation Inventory
+## Section C — Per-file operation inventory
 
-`script/Deploy.s.sol` is the only Solidity file in `script/`. Tests in `test/` exercise the configuration logic (`TestFeeProjectDeployer.sol`), fork the live deployment (`FeeProjectDeployerFork.t.sol`), edge-case the parameters (`FeeProjectEdgeCases.t.sol`, `test/audit/`), and lock the canonical-replay surface against regression (`test/regression/`).
+`script/Deploy.s.sol` is the only Solidity file in `script/`. Tests in `test/` exercise the configuration logic (`TestFeeProjectDeployer.sol`), fork the live deployment (`FeeProjectDeployerFork.t.sol`), edge-case the parameters (`FeeProjectEdgeCases.t.sol`), and lock the canonical-replay surface against regression (`test/regression/`).
 
-## C.1 `DeployScript` — `script/Deploy.s.sol`
+### C.1 `DeployScript` — `script/Deploy.s.sol`
 
 Inherits `forge-std/Script.sol` and Sphinx's `Sphinx`. Has no storage other than four `*Deployment` struct slots populated by `run()` for use inside `deploy()`.
 
-### Constants (`script/Deploy.s.sol:46–60`)
+#### Constants (`script/Deploy.s.sol:46–60`)
 
 All `constant` — burned into bytecode, not mutable across deployments. The list is the authoritative source of NANA's configuration:
 
@@ -116,12 +116,12 @@ All `constant` — burned into bytecode, not mutable across deployments. The lis
 
 Changing any of these constants in a future revision and re-running on a chain that already has canonical NANA would revert with `DeployScript_FeeProjectNotCanonical(1)` (B.1.1).
 
-### State
+#### State
 
 - **`address operator`** (`script/Deploy.s.sol:61`) — populated by `run()` from a hardcoded value (`0x80a8F7a4bD75b539CE26937016Df607fdC9ABeb5`, A.1.3). Never written elsewhere.
 - **`CoreDeployment core`**, **`RevnetCoreDeployment revnet`**, **`SuckerDeployment suckers`**, **`RouterTerminalDeployment routerTerminal`** (`script/Deploy.s.sol:38–44`) — populated by `run()` from sibling-package deployment JSONs (paths overridable via env vars). All four are required.
 
-### Public entrypoints
+#### Public entrypoints
 
 - **`configureSphinx() public override`** (`script/Deploy.s.sol:63–68`) — Sphinx hook. Declares project name `"nana-fee-project"` and the chain sets (B.3.1). Reads no chain state, writes no storage.
 - **`run() public`** (`script/Deploy.s.sol:70–97`) — Forge entrypoint. Loads the four `*Deployment` structs from the configured JSON paths, sets `operator`, calls `deploy()`. Reading the JSONs is outside the `sphinx` modifier intentionally (Sphinx executes only the `deploy()` body as on-chain transactions; off-chain reads must run in plain forge context first).
@@ -132,7 +132,7 @@ Changing any of these constants in a future revision and re-running on a chain t
   - **First-launch branch**: `core.projects.approve(revnet.basicDeployer, feeProjectId)` then `revnet.basicDeployer.deployFor({revnetId: 1, configuration, accountingContextsToAccept, suckerDeploymentConfiguration})` (`script/Deploy.s.sol:215–225`).
   - **Invariants:** A.1–A.4, B.1, B.2.1–B.2.2, B.3.
 
-### Internal helpers
+#### Internal helpers
 
 - **`_feeProjectIsCanonical(uint256 feeProjectId, bytes32 expectedConfigurationHash, address expectedOperator) internal view returns (bool)`** (`script/Deploy.s.sol:228–253`) — the nine-property canonical-replay check (B.1.2). All nine must pass; any one failing returns `false` and causes the caller to revert with the explicit error.
 - **`_encodedConfigurationHashOf(REVConfig configuration) internal view returns (bytes32)`** (`script/Deploy.s.sol:256–302`) — mirrors `REVDeployer`'s storage hash function so the script can compare without trusting downstream state. Stage start-time monotonicity violation returns `bytes32(0)` instead of reverting, guaranteeing a comparison mismatch (B.1.3).
@@ -140,11 +140,11 @@ Changing any of these constants in a future revision and re-running on a chain t
 - **`_nativeTerminalConfigIsCanonical(uint256 projectId) internal view returns (bool)`** (`script/Deploy.s.sol:330–345`) — verifies the directory's `primaryTerminalOf(projectId, NATIVE_TOKEN) == core.terminal` AND `isTerminalOf(projectId, routerTerminal.registry) == true` AND the multi-terminal's accounting context matches `{NATIVE_TOKEN, 18 decimals, NATIVE_CURRENCY}`. Other terminals may additionally be configured without failing this check, but the two canonical surfaces MUST be present in the expected roles.
 - **`_projectTokenSymbolIs(uint256 projectId, string memory expectedSymbol) internal view returns (bool)`** (`script/Deploy.s.sol:348–356`) — pulls the project's ERC-20 address via `core.tokens.tokenOf(projectId)`, returns `false` if zero (no ERC-20 deployed yet), else low-level `staticcall("symbol()")` and `keccak256` compares against the expected symbol. Uses staticcall instead of an interface call because the return-type `string` can fail safely on a non-ERC-20 contract address.
 
-### Errors
+#### Errors
 
 - **`DeployScript_FeeProjectNotCanonical(uint256 projectId)`** (`script/Deploy.s.sol:35`) — the single revert this script can throw on its own behalf. Surfaces a non-canonical pre-existing project 1; cannot be muted or recovered without making the on-chain state match the script's expectations.
 
-## C.2 Tests under `test/`
+### C.2 Tests under `test/`
 
 - **`test/TestFeeProjectDeployer.sol`** — `FeeProjectConfigBuilder` mirrors the script's configuration logic (without Sphinx / deployment-artifact reads) and exercises it against `MockREVDeployer` to assert the exact `REVConfig`, accounting contexts, and sucker deployer configuration that get passed to `REVDeployer.deployFor`. Locks A.1, A.2, A.3, A.4 against silent regression.
 - **`test/FeeProjectEdgeCases.t.sol`** — Stands up the full core + 721 hook + buyback + suckers + Croptop + revnet stack in-memory (no fork) and pushes the canonical NANA deployment through it. Exercises end-to-end behaviour against the same constants the production script uses; identifies edge cases like missing native-ETH price feeds (see `test/regression/MissingNativeEthFeed.t.sol`).
@@ -154,7 +154,7 @@ Changing any of these constants in a future revision and re-running on a chain t
 - **`test/regression/RegressionDeployment.t.sol`** — Locks the first-launch path's expected calldata into `REVDeployer.deployFor`.
 - **`test/regression/RegressionProjectOneSquat.t.sol`** — Adversarial: someone deploys a non-canonical project as project `#1` before this script runs. Asserts the script reverts `DeployScript_FeeProjectNotCanonical(1)` and does not silently accept the squatter.
 
-## C.3 `script/Deploy.s.sol` does NOT contain
+### C.3 `script/Deploy.s.sol` does NOT contain
 
 - A surface that mints NANA tokens directly.
 - A surface that can change a deployed NANA ruleset, splits, terminals, accounting contexts, or operator. Those flow through `REVOwner` (operator-rotated permission set) or are structurally frozen (rulesets, see `../INVARIANTS.md` D.13).
@@ -164,7 +164,7 @@ Changing any of these constants in a future revision and re-running on a chain t
 
 ---
 
-# Section D — Cross-Cutting Invariants
+## Section D — Cross-cutting invariants
 
 - **D.1 The constants ARE the policy.** Every behaviour-shaping decision is a `constant` at `script/Deploy.s.sol:46–60`. Reviewing this deployment is reviewing those constants, the `REVStageConfig` block at lines 141–152, and the canonical-replay properties at 228–251. There is no runtime configuration to inspect — the script's outputs are a pure function of its constants and the loaded deployment artifacts.
 - **D.2 Cross-chain parity is hash-enforced, not check-enforced.** Every chain produces an identical `_encodedConfigurationHashOf(revnetConfiguration)` because every chain executes the same constants (B.3.2). Drift on one chain would surface as a hash mismatch against `REVDeployer.hashedEncodedConfigurationOf(1)` on a subsequent replay or on cross-chain sucker reconciliation; there is no second consistency rail.
@@ -177,7 +177,7 @@ Changing any of these constants in a future revision and re-running on a chain t
 
 ---
 
-# Section E — Centralization Caveats
+## Section E — Centralization caveats
 
 This script's centralization posture is the *intersection* of the trust placed in (a) the Sphinx project safe that executes `deploy()`, (b) the constants the script hardcodes, and (c) the downstream packages it composes.
 
@@ -191,7 +191,7 @@ This script does NOT introduce new global admins beyond the ones already documen
 
 ---
 
-# Section F — Key Code References
+## Section F — Key code references
 
 | Invariant | File:lines |
 |---|---|
