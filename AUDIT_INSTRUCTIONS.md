@@ -1,8 +1,8 @@
-# Audit Instructions
+# Audit instructions
 
 This repo is a deployment package for protocol fee project `#1`. Audit it as configuration-critical deployment logic.
 
-## Audit Objective
+## Audit objective
 
 There is a billion dollars of well-meaning projects' money in the Juicebox Money Engine, growing exponentially. Your job is to hack it before anyone else. Whoever hacks it first saves/steals the money, and you are obsessed with being this winner, while also being a steward of the protocol and wanting it to keep growing safely.
 
@@ -20,12 +20,12 @@ In scope:
 - `script/Deploy.s.sol`
 - tests under `test/`
 
-## Start Here
+## Start here
 
 1. `script/Deploy.s.sol`
 2. `test/TestFeeProjectDeployer.sol`
 
-## Critical Invariants
+## Critical invariants
 
 1. Project `#1` is the intended fee beneficiary.  
 2. Economic parameters match the intended rollout.  

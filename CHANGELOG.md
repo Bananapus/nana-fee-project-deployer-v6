@@ -25,38 +25,42 @@
 - `@bananapus/suckers-v6`: `^0.0.43 → ^0.0.46`.
 - All `JBRulesetMetadata` literals (src + test) patched to include `pauseCrossProjectFeeFreeInflows: false`.
 
-## Scope
+## v5 to v6 migration
 
-This file describes the verified change from `nana-fee-project-deployer-v5` to the current `nana-fee-project-deployer-v6` repo.
+The verified v5 → v6 delta for this repo. The runtime surface is a deploy script, so the breaks live in the config objects it constructs for downstream v6 packages rather than in a contract ABI.
 
-## Current v6 surface
+### Scope
+
+This section describes the verified change from `nana-fee-project-deployer-v5` to `nana-fee-project-deployer-v6`.
+
+### v6 surface
 
 - `script/Deploy.s.sol`
 
-## Summary
+### Summary
 
-- The deployment flow now assumes the router-terminal ecosystem instead of the old swap-terminal one.
-- Sucker-related deployment inputs follow the v6 remote-token model, which means the surrounding config assumptions moved with `nana-suckers-v6`.
-- This repo remains deployment-oriented rather than ABI-heavy, but its wiring changed because the downstream protocol packages changed.
-- The repo moved from the v5 Solidity baseline to `0.8.28`.
+- The deployment flow targets the router-terminal ecosystem in place of the v5 swap-terminal one.
+- Sucker-related deployment inputs follow the v6 remote-token model, so the surrounding config assumptions moved with `nana-suckers-v6`.
+- The repo stays deployment-oriented rather than ABI-heavy, but its wiring tracks the downstream protocol packages it composes.
+- The repo targets Solidity `0.8.28`.
 
-## Verified deltas
+### Verified deltas
 
-- The v5 script imported `SwapTerminalDeploymentLib`; the current script imports `RouterTerminalDeploymentLib`.
-- The current deploy script encodes the remote native token as `bytes32(uint256(uint160(JBConstants.NATIVE_TOKEN)))` instead of using the old raw-address field.
-- The old `minBridgeAmount` field is gone from the current script's token-mapping construction.
+- v5 imported `SwapTerminalDeploymentLib`; v6 imports `RouterTerminalDeploymentLib`.
+- v6 encodes the remote native token as `bytes32(uint256(uint160(JBConstants.NATIVE_TOKEN)))` in place of the v5 raw-address field.
+- The v5 `minBridgeAmount` field is absent from v6's token-mapping construction.
 
-## Breaking ABI changes
+### Breaking ABI changes
 
-- This repo is still deployment-script-oriented rather than a contract ABI target.
-- The meaningful break is in the config objects it constructs for downstream v6 repos: router-terminal inputs, bytes32 remote-token encoding, and the absence of v5 loan/buyback-hook config shape.
+- This repo is deployment-script-oriented rather than a contract ABI target.
+- The meaningful break is in the config objects it constructs for downstream v6 repos: router-terminal inputs, bytes32 remote-token encoding, and the absence of the v5 loan/buyback-hook config shape.
 
-## Indexer impact
+### Indexer impact
 
 - None directly from this repo's own runtime surface.
-- Deployment wrappers that mirror this script need to update their config serialization and downstream ABI expectations.
+- Deployment wrappers that mirror this script update their config serialization and downstream ABI expectations to match.
 
-## Migration notes
+### Migration notes
 
-- If you wrap or mirror this deploy script, rebuild its config inputs from the current downstream v6 packages.
-- Do not port old swap-terminal assumptions forward. The deployment surface now targets router-terminal-era components.
+- If you wrap or mirror this deploy script, rebuild its config inputs from the v6 downstream packages.
+- Do not carry v5 swap-terminal assumptions forward; the deployment surface targets router-terminal-era components.

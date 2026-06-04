@@ -1,11 +1,11 @@
 # Juicebox Fee Project Deployer
 
-## Use This File For
+## Use this file for
 
 - Use this file when the task involves deploying or reviewing protocol fee project `#1`.
 - Start here, then decide whether the issue is in deployment packaging, cross-chain parity, or the runtime repo this deployer wires together.
 
-## Read This Next
+## Read this next
 
 | If you need... | Open this next |
 |---|---|
@@ -19,7 +19,7 @@
 
 Single-purpose deployment package for the canonical protocol fee project.
 
-## Working Rules
+## Working rules
 
 - Start in [`script/Deploy.s.sol`](./script/Deploy.s.sol).
 - Treat deployment parameters as economic policy, not boilerplate.

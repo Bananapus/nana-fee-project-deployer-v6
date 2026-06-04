@@ -1,21 +1,21 @@
 # User Journeys
 
-## Repo Purpose
+## Repo purpose
 
 This repo deploys protocol fee project `#1` in the intended V6 shape.
 
-## Primary Actors
+## Primary actors
 
 - operators deploying the canonical fee project
 - auditors verifying that project `#1` matches ecosystem assumptions
 - engineers rehearsing or replaying deployment flows
 
-## Key Surfaces
+## Key surfaces
 
 - `script/Deploy.s.sol`
 - fee-project tests and edge-case tests
 
-## Journey 1: Deploy Protocol Fee Project `#1`
+## Journey 1: Deploy protocol fee project `#1`
 
 **Actor:** deployment operator.
 
@@ -38,7 +38,7 @@ This repo deploys protocol fee project `#1` in the intended V6 shape.
 **Postconditions**
 - project `#1` exists as the intended fee beneficiary
 
-## Journey 2: Verify Cross-Chain Parity
+## Journey 2: Verify cross-chain parity
 
 **Actor:** operator or auditor.
 
@@ -59,13 +59,13 @@ This repo deploys protocol fee project `#1` in the intended V6 shape.
 **Postconditions**
 - the deployment set is internally consistent
 
-## Trust Boundaries
+## Trust boundaries
 
 - this repo trusts sibling deployment artifacts
 - most runtime behavior lives in the repos it composes
 - project `#1` is an ecosystem-wide assumption after deployment
 
-## Hand-Offs
+## Hand-offs
 
 - Use `revnet-core-v6` for runtime fee-project economics.
 - Use `nana-router-terminal-v6` and `nana-suckers-v6` for the runtime behavior of the attached surfaces.
