@@ -12,7 +12,7 @@
 - [ADMINISTRATION.md](./ADMINISTRATION.md) — deployment-time control, recovery posture, and admin boundaries
 - [AUDIT_INSTRUCTIONS.md](./AUDIT_INSTRUCTIONS.md) — audit objective, scope, and the critical invariants to attack first
 - [STYLE_GUIDE.md](./STYLE_GUIDE.md) — NatSpec, comment, naming, and lint conventions for the deploy script
-- [CHANGELOG.md](./CHANGELOG.md) — release history and the v5 to v6 migration delta
+- [CHANGELOG.md](./CHANGELOG.md) - V5 to V6 deployment migration changelog
 - [references/operations.md](./references/operations.md) — change checklist and common failure modes when editing the fee project
 - [references/runtime.md](./references/runtime.md) — the runtime role of the deploy script and which tests to trust first
 

@@ -247,7 +247,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
         require(createdId == FEE_PROJECT_ID, "Expected project ID 1");
 
         // ── Deploy supporting infrastructure ──
-        suckerRegistry = new JBSuckerRegistry(jbDirectory, jbPermissions, MULTISIG, TRUSTED_FORWARDER);
+        suckerRegistry = new JBSuckerRegistry(jbDirectory, jbPermissions, jbPrices, MULTISIG, TRUSTED_FORWARDER);
 
         JB721TiersHookStore hookStore = new JB721TiersHookStore();
         JB721CheckpointsDeployer checkpointsDeployer = new JB721CheckpointsDeployer(hookStore);
@@ -519,8 +519,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             tokenToReclaim: JBConstants.NATIVE_TOKEN,
             minTokensReclaimed: 0,
             beneficiary: payable(PAYER),
-            metadata: "",
-            referralProjectId: 0
+            metadata: ""
         });
 
         // The cashout should complete without reverting (no infinite loop).
@@ -611,8 +610,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             tokenToReclaim: JBConstants.NATIVE_TOKEN,
             minTokensReclaimed: 0,
             beneficiary: payable(PAYER),
-            metadata: "",
-            referralProjectId: 0
+            metadata: ""
         });
 
         vm.prank(PAYER2);
@@ -623,8 +621,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             tokenToReclaim: JBConstants.NATIVE_TOKEN,
             minTokensReclaimed: 0,
             beneficiary: payable(PAYER2),
-            metadata: "",
-            referralProjectId: 0
+            metadata: ""
         });
 
         vm.prank(PAYER3);
@@ -635,8 +632,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             tokenToReclaim: JBConstants.NATIVE_TOKEN,
             minTokensReclaimed: 0,
             beneficiary: payable(PAYER3),
-            metadata: "",
-            referralProjectId: 0
+            metadata: ""
         });
 
         assertTrue(reclaimA > 0 && reclaimB > 0 && reclaimC > 0, "All cashouts should reclaim some ETH");
@@ -764,8 +760,7 @@ contract FeeProjectEdgeCases is Test, DeployPermit2 {
             tokenToReclaim: JBConstants.NATIVE_TOKEN,
             minTokensReclaimed: 0,
             beneficiary: payable(PAYER),
-            metadata: "",
-            referralProjectId: 0
+            metadata: ""
         });
 
         assertTrue(reclaimAmount > 0, "Cashout should still succeed even when fee processing fails");
