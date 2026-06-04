@@ -241,7 +241,7 @@ contract FeeProjectDeployerForkTest is Test, DeployPermit2 {
         require(createdId == FEE_PROJECT_ID, "Expected project ID 1");
 
         // ── Deploy supporting infrastructure ──
-        suckerRegistry = new JBSuckerRegistry(jbDirectory, jbPermissions, MULTISIG, TRUSTED_FORWARDER);
+        suckerRegistry = new JBSuckerRegistry(jbDirectory, jbPermissions, jbPrices, MULTISIG, TRUSTED_FORWARDER);
 
         JB721TiersHookStore hookStore = new JB721TiersHookStore();
         JB721CheckpointsDeployer checkpointsDeployer = new JB721CheckpointsDeployer(hookStore);

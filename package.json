@@ -23,6 +23,8 @@
   },
   "dependencies": {
     "@bananapus/core-v6": "^0.0.82",
+    "@bananapus/ownable-v6": "^0.0.39",
+    "@bananapus/permission-ids-v6": "^0.0.31",
     "@bananapus/router-terminal-v6": "^0.0.64",
     "@bananapus/suckers-v6": "^0.0.72",
     "@rev-net/core-v6": "^0.0.89"
