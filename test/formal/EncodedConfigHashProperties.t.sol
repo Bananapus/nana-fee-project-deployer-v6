@@ -180,6 +180,7 @@ contract EncodedConfigHashProperties is Test {
             autoIssuances: issuanceConfs,
             splitPercent: 6200,
             splits: splits,
+            // forge-lint: disable-next-line(unsafe-typecast)
             initialIssuance: uint112(10_000 * DECIMAL_MULTIPLIER),
             issuanceCutFrequency: 360 days,
             issuanceCutPercent: 380_000_000,

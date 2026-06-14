@@ -140,12 +140,14 @@ contract DeployLogicProperties is Test {
     ///         of the native sentinel address (A.1.4), distinct from the ruleset base currency (ETH = 1). This pins the
     ///         token-keyed currency derivation the canonical terminal check relies on.
     function check_nativeCurrencyDerivation(address token) public pure {
+        // forge-lint: disable-next-line(unsafe-typecast)
         uint32 derived = uint32(uint160(token));
         // The derivation isolates exactly the low 32 bits.
         assert(uint256(derived) == (uint256(uint160(token)) & 0xFFFFFFFF));
     }
 
     function testFuzz_nativeCurrencyDerivation(address token) public pure {
+        // forge-lint: disable-next-line(unsafe-typecast)
         assertEq(uint256(uint32(uint160(token))), uint256(uint160(token)) & 0xFFFFFFFF, "low 32 bits isolated");
     }
 
@@ -154,6 +156,7 @@ contract DeployLogicProperties is Test {
     ///         (ETH=1) != accounting-context currency (token-keyed).
     function test_nativeCurrencyIsNotEthBaseCurrency() public pure {
         address nativeToken = 0x000000000000000000000000000000000000EEEe;
+        // forge-lint: disable-next-line(unsafe-typecast)
         uint32 nativeCurrency = uint32(uint160(nativeToken));
         assertEq(nativeCurrency, 0x0000EEEe, "native currency is low 32 bits of the sentinel");
         assertTrue(nativeCurrency != 1, "native accounting currency differs from ETH base-currency id (1)");
