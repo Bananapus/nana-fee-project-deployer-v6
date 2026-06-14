@@ -1,6 +1,6 @@
 {
   "name": "@bananapus/fee-project-deployer-v6",
-  "version": "0.0.40",
+  "version": "0.0.41",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -26,7 +26,7 @@
     "@bananapus/ownable-v6": "^0.0.40",
     "@bananapus/permission-ids-v6": "^0.0.32",
     "@bananapus/router-terminal-v6": "^0.0.69",
-    "@bananapus/suckers-v6": "^0.0.76",
+    "@bananapus/suckers-v6": "^0.0.79",
     "@rev-net/core-v6": "^0.0.93"
   },
   "devDependencies": {
